@@ -1,0 +1,20 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+The app has this structure:
+```
+src/
+    assets/
+        logo.png (etc etc)
+    components/
+    pages/
+```
+
+Create components so that those can be reused. before creating always check for existing components.
+All pages should be inside the `pages/` folder.
+
+For creating pages. Do not create css files. Use tailwind.
+
+For the backend, Supabase is used. For authentication too.

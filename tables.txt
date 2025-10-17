@@ -1,0 +1,11 @@
+page_contents - Stores CMS content for different pages (home, about, etc.)
+
+CREATE TABLE public.page_contents (
+  "pageName" text NOT NULL,
+  content json NOT NULL,
+  "updatedAt" timestamp with time zone DEFAULT now(),
+  CONSTRAINT page_contents_pkey PRIMARY KEY ("pageName")
+);
+
+-- Disable RLS for now (you can enable it later with proper policies)
+ALTER TABLE public.page_contents DISABLE ROW LEVEL SECURITY; 
