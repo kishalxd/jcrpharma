@@ -8,4 +8,4 @@ CREATE TABLE public.page_contents (
 );
 
 -- Disable RLS for now (you can enable it later with proper policies)
-ALTER TABLE public.page_contents DISABLE ROW LEVEL SECURITY; 
+ALTER TABLE public.page_contents DISABLE ROW LEVEL SECURITY;  
