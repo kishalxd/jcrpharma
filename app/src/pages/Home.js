@@ -1,7 +1,234 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAdmin } from '../components/AdminContext';
+
+// Custom hook for scroll animations
+const useScrollAnimation = () => {
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -100px 0px',
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const delay = entry.target.getAttribute('data-animate-delay');
+          if (delay) {
+            const delayMs = parseInt(delay);
+            entry.target.style.animationDelay = `${delayMs}ms`;
+          }
+          entry.target.classList.add('animate-fade-in');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    const elements = document.querySelectorAll('[data-animate], [data-animate-delay]');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+    };
+  }, []);
+};
+
+// Animated Counter Component
+const AnimatedCounter = ({ targetValue, className = "" }) => {
+  const [count, setCount] = useState(0);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const countRef = useRef(null);
+
+  useEffect(() => {
+    if (hasAnimated) return;
+
+    const currentRef = countRef.current;
+    if (!currentRef) return;
+
+    const observerOptions = {
+      threshold: 0.3,
+      rootMargin: '0px',
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && !hasAnimated) {
+          setHasAnimated(true);
+          const target = parseFloat(targetValue);
+          if (isNaN(target)) return;
+
+          const duration = 2000; // 2 seconds
+          const steps = 60;
+          const increment = target / steps;
+          const stepDuration = duration / steps;
+
+          let current = 0;
+          const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+              current = target;
+              clearInterval(timer);
+            }
+            setCount(current);
+          }, stepDuration);
+        }
+      });
+    }, observerOptions);
+
+    observer.observe(currentRef);
+
+    return () => {
+      if (currentRef) observer.unobserve(currentRef);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasAnimated]);
+
+  // Display format based on target value
+  const displayValue = () => {
+    if (targetValue.includes('%')) {
+      return `${Math.floor(count)}%`;
+    } else if (targetValue.includes('+')) {
+      return `${Math.floor(count)}+`;
+    } else {
+      return Math.floor(count).toString();
+    }
+  };
+
+  return <span ref={countRef} className={className}>{displayValue()}</span>;
+};
+
+// Parallax USP Section Component
+const ParallaxUSPSection = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const sectionRef = useRef(null);
+
+  const uspItems = [
+    {
+      title: "Quality over quantity",
+      icon: (
+        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      description: "We don't just send countless CVs. We find 5-7 CVs on paper that are perfect for the role. You then pick your favourite through the recruitment process.",
+    },
+    {
+      title: "Consultative approach",
+      icon: (
+        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      description: "Working as a collaborative team with you, advising you through the process, and giving you valuable insights to the industry.",
+    },
+    {
+      title: "Specialized experts",
+      icon: (
+        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      ),
+      description: "We're specialized. We don't recruit everything. Our network is advanced and deep within the industry, and we constantly have our finger on the pulse.",
+    },
+  ];
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!sectionRef.current) return;
+      
+      const rect = sectionRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      // If section hasn't entered viewport yet
+      if (rect.top > windowHeight) {
+        setActiveIndex(0);
+        return;
+      }
+      
+      // If section is completely scrolled past
+      if (rect.bottom < 0) {
+        setActiveIndex(2);
+        return;
+      }
+      
+      // Calculate how much of the section has been scrolled through
+      // When section just enters (top = windowHeight), scrolled = 0
+      // As we scroll, scrolled increases
+      const scrolled = Math.max(0, windowHeight - rect.top);
+      const sectionHeight = rect.height;
+      
+      // Calculate progress as a ratio (0 to 1)
+      const progress = scrolled / sectionHeight;
+      
+      // Determine active index based on progress
+      // Each section gets roughly equal scroll space
+      if (progress < 0.25) {
+        setActiveIndex(0);  // Quality over quantity
+      } else if (progress < 0.6) {
+        setActiveIndex(1);  // Consultative approach
+      } else {
+        setActiveIndex(2);  // Specialized experts
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <section className="bg-brand-blue py-32 relative" ref={sectionRef} style={{ minHeight: '400vh' }}>
+      <div className="container mx-auto px-6">
+        <div className="text-center mb-40 opacity-0" data-animate>
+          <p className="text-gray-300 text-sm uppercase tracking-wide mb-4">Why choose us</p>
+          <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-white">
+            Our unique value proposition
+          </h2>
+          <p className="text-gray-300 text-lg max-w-3xl mx-auto">
+            Specialized recruitment strategies that deliver exceptional results
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-start max-w-7xl mx-auto">
+          {/* Left side - Title (Fixed/Sticky) */}
+          <div className="md:sticky md:top-1/3 self-start">
+            <div className="relative w-full min-h-[200px]">
+              {uspItems.map((item, index) => (
+                <div
+                  key={index}
+                  className={`transition-all duration-500 ${
+                    activeIndex === index
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 translate-y-8 pointer-events-none absolute top-0 left-0 w-full'
+                  }`}
+                >
+                  <h3 className="text-4xl md:text-5xl font-light leading-tight text-white">
+                    {item.title}
+                  </h3>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right side - Scrolling descriptions */}
+          <div className="space-y-[60vh]">
+            {uspItems.map((item, index) => (
+              <div key={index} className="min-h-[60vh] flex items-start pt-0">
+                <div className="w-full">
+                  <p className="text-gray-300 text-lg leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, addTestimonial, deleteTestimonial }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -82,9 +309,9 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
           {/* Left Arrow - Positioned relative to testimonial text */}
           <button 
             onClick={prevTestimonial}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-16 w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow"
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-16 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white/30 transition-shadow"
           >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -92,21 +319,21 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
           {/* Right Arrow - Positioned relative to testimonial text */}
           <button 
             onClick={nextTestimonial}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-16 w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-16 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white/30 transition-shadow"
           >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
-          <blockquote className="text-xl md:text-2xl font-light text-gray-900 mb-12 max-w-4xl mx-auto leading-relaxed">
+          <blockquote className="text-xl md:text-2xl font-light text-white mb-12 max-w-4xl mx-auto leading-relaxed">
             "
             <EditableTestimonialText
               value={currentTestimonial.quote}
               onChange={(value) => updateTestimonial(currentTestimonial.id, 'quote', value)}
               multiline={true}
               placeholder="Enter testimonial quote..."
-              className="text-xl md:text-2xl font-light text-gray-900 leading-relaxed inline-block w-full"
+              className="text-xl md:text-2xl font-light text-white leading-relaxed inline-block w-full"
             />
             "
           </blockquote>
@@ -115,39 +342,39 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
         {/* Author Info */}
         <div className="flex flex-col items-center">
           {/* Avatar */}
-          <div className="w-16 h-16 bg-blue-200 rounded-full mb-4 flex items-center justify-center">
-            <span className="text-blue-800 font-semibold text-lg">
+          <div className="w-16 h-16 bg-white rounded-full mb-4 flex items-center justify-center">
+            <span className="text-brand-blue font-semibold text-lg">
               <EditableTestimonialText
                 value={currentTestimonial.avatar}
                 onChange={(value) => updateTestimonial(currentTestimonial.id, 'avatar', value)}
                 placeholder="Avatar..."
-                className="text-blue-800 font-semibold text-lg text-center"
+                className="text-brand-blue font-semibold text-lg text-center"
               />
             </span>
           </div>
 
           {/* Name and Position */}
-          <h4 className="text-lg font-medium text-gray-900 mb-1">
+          <h4 className="text-lg font-medium text-white mb-1">
             <EditableTestimonialText
               value={currentTestimonial.author}
               onChange={(value) => updateTestimonial(currentTestimonial.id, 'author', value)}
               placeholder="Author name..."
-              className="text-lg font-medium text-gray-900 text-center block w-full"
+              className="text-lg font-medium text-white text-center block w-full"
             />
           </h4>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             <EditableTestimonialText
               value={currentTestimonial.position}
               onChange={(value) => updateTestimonial(currentTestimonial.id, 'position', value)}
               placeholder="Position..."
-              className="text-gray-600 text-center inline-block"
+              className="text-gray-300 text-center inline-block"
             />
             , 
             <EditableTestimonialText
               value={currentTestimonial.company}
               onChange={(value) => updateTestimonial(currentTestimonial.id, 'company', value)}
               placeholder="Company..."
-              className="text-gray-600 text-center inline-block ml-1"
+              className="text-gray-300 text-center inline-block ml-1"
             />
           </p>
         </div>
@@ -159,7 +386,7 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
               key={index}
               onClick={() => goToTestimonial(index)}
               className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentIndex ? 'bg-gray-900' : 'bg-gray-300 hover:bg-gray-400'
+                index === currentIndex ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
               }`}
             />
           ))}
@@ -174,10 +401,10 @@ const Home = () => {
   const [searchParams] = useSearchParams();
   const { isAdminAuthenticated } = useAdmin();
   const [content, setContent] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedNotification, setSavedNotification] = useState(false);
+  const [featuredJobs, setFeaturedJobs] = useState([]);
 
   // Check if we're in edit mode from URL params and if admin is logged in
   useEffect(() => {
@@ -223,16 +450,16 @@ const Home = () => {
       title: "Measuring our recruitment\nexcellence",
       subtitle: "Quantifiable results that demonstrate our specialized approach",
       stat1: {
-        number: "14",
-        description: "Days average time-to-hire"
+        number: "3 Weeks",
+        description: "Average time-to-hire"
       },
       stat2: {
-        number: "92%",
+        number: "95%",
         description: "Interview to offer success rate"
       },
       stat3: {
-        number: "150+",
-        description: "Placements across global markets"
+        number: "90%+",
+        description: "Candidate retention after 1 year"
       }
     },
     cta: {
@@ -286,10 +513,6 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    fetchContent();
-  }, []);
-
   const fetchContent = async () => {
     try {
       const { data, error } = await supabase
@@ -309,10 +532,60 @@ const Home = () => {
     } catch (error) {
       console.error('Error fetching content:', error);
       setContent(defaultContent);
-    } finally {
-      setLoading(false);
     }
   };
+
+  const fetchFeaturedJobs = async () => {
+    try {
+      // Get all latest jobs (both featured and non-featured, max 5)
+      const { data: allJobsData, error: allError } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (allError) throw allError;
+
+      // Separate featured and non-featured
+      const featuredJobs = allJobsData.filter(job => job.featured);
+      const nonFeaturedJobs = allJobsData.filter(job => !job.featured);
+
+      // Prioritize showing featured jobs, but also include non-featured to show variety
+      let result = [];
+      
+      // Add up to 2 featured jobs
+      if (featuredJobs.length > 0) {
+        result.push(...featuredJobs.slice(0, 2));
+      }
+      
+      // Add non-featured jobs to fill up to 3 total
+      const remaining = 3 - result.length;
+      if (remaining > 0 && nonFeaturedJobs.length > 0) {
+        result.push(...nonFeaturedJobs.slice(0, remaining));
+      }
+      
+      // If we have less than 3 and more featured jobs, add them
+      const stillRemaining = 3 - result.length;
+      if (stillRemaining > 0 && featuredJobs.length > result.filter(j => j.featured).length) {
+        const additionalFeatured = featuredJobs.slice(result.length, result.length + stillRemaining);
+        result = [...result, ...additionalFeatured];
+      }
+
+      setFeaturedJobs(result);
+    } catch (error) {
+      console.error('Error fetching featured jobs:', error);
+      setFeaturedJobs([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchContent();
+    fetchFeaturedJobs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useScrollAnimation();
 
   const pageContent = content || defaultContent;
 
@@ -379,7 +652,7 @@ const Home = () => {
   const saveContent = async () => {
     setSaving(true);
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('page_contents')
         .upsert({
           pageName: 'home',
@@ -423,7 +696,7 @@ const Home = () => {
     return (
       <div className="relative group">
         <Component
-          value={value}
+
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           rows={multiline ? rows : undefined}
@@ -479,54 +752,57 @@ const Home = () => {
         
         {/* Hero Section */}
         <main className="container mx-auto px-6 py-20">
-          <div className="text-center text-white mb-16">
-            <h1 className="text-5xl md:text-6xl font-light mb-8 leading-tight">
-              <EditableText
-                value={pageContent.hero.title}
-                onChange={(value) => updateContent('hero.title', value)}
-                multiline={true}
-                rows={2}
-                placeholder="Enter hero title..."
-                className="text-5xl md:text-6xl font-light leading-tight text-center block w-full"
-              />
-            </h1>
-            <p className="text-gray-300 text-lg md:text-xl mb-12 max-w-4xl mx-auto leading-relaxed">
-              <EditableText
-                value={pageContent.hero.subtitle}
-                onChange={(value) => updateContent('hero.subtitle', value)}
-                multiline={true}
-                rows={3}
-                placeholder="Enter hero subtitle..."
-                className="text-gray-300 text-lg md:text-xl leading-relaxed text-center block w-full"
-              />
-            </p>
-            
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20">
-              <button 
-                onClick={() => navigate('/hire-talent')}
-                className="bg-white/10 hover:bg-white/20 text-white hover:text-white px-8 py-3 rounded-full transition-all duration-300 backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.2)] hover:backdrop-blur-lg font-medium"
-              >
-                Hire talent
-              </button>
-              <button 
-                onClick={() => navigate('/find-jobs')}
-                className="bg-white/10 text-white hover:bg-white/15 px-8 py-3 rounded-full transition-all duration-300 backdrop-blur-sm hover:backdrop-blur-lg shadow-[0_2px_4px_rgba(0,0,0,0.15)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15)] font-medium"
-              >
-                Find jobs
-              </button>
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
+            {/* Left side - Text and Buttons (50%) */}
+            <div className="text-white">
+              <h1 className="text-5xl md:text-6xl font-light mb-8 leading-tight text-left">
+                <EditableText
+                  value={pageContent.hero.title}
+                  onChange={(value) => updateContent('hero.title', value)}
+                  multiline={true}
+                  rows={2}
+                  placeholder="Enter hero title..."
+                  className="text-5xl md:text-6xl font-light leading-tight text-left block w-full"
+                />
+              </h1>
+              <p className="text-gray-300 text-lg md:text-xl mb-12 leading-relaxed text-left">
+                <EditableText
+                  value={pageContent.hero.subtitle}
+                  onChange={(value) => updateContent('hero.subtitle', value)}
+                  multiline={true}
+                  rows={3}
+                  placeholder="Enter hero subtitle..."
+                  className="text-gray-300 text-lg md:text-xl leading-relaxed text-left block w-full"
+                />
+              </p>
+              
+              {/* Action Buttons - Left Aligned */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-start">
+                <button 
+                  onClick={() => navigate('/hire-talent')}
+                  className="bg-white/10 hover:bg-white/20 text-white hover:text-white px-8 py-3 rounded-full transition-all duration-300 backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.2)] hover:backdrop-blur-lg font-medium"
+                >
+                  Hire talent
+                </button>
+                <button 
+                  onClick={() => navigate('/find-jobs')}
+                  className="bg-white/10 text-white hover:bg-white/15 px-8 py-3 rounded-full transition-all duration-300 backdrop-blur-sm hover:backdrop-blur-lg shadow-[0_2px_4px_rgba(0,0,0,0.15)] hover:shadow-[0_2px_4px_rgba(0,0,0,0.15)] font-medium"
+                >
+                  Find jobs
+                </button>
+              </div>
             </div>
-          </div>
-          
-          {/* Image/Video Placeholder */}
-          <div className="max-w-6xl mx-auto mb-20">
-            <div className="bg-slate-700 rounded-lg overflow-hidden shadow-2xl">
-              <div className="aspect-video flex items-center justify-center bg-gradient-to-br from-slate-600 to-slate-700">
-                <div className="bg-slate-500 bg-opacity-50 rounded-lg p-8">
-                  <div className="w-24 h-24 bg-slate-400 rounded-lg flex items-center justify-center">
-                    <svg className="w-12 h-12 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                    </svg>
+            
+            {/* Right side - Image (50%) */}
+            <div>
+              <div className="bg-slate-700 rounded-lg overflow-hidden shadow-2xl">
+                <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-slate-600 to-slate-700">
+                  <div className="bg-slate-500 bg-opacity-50 rounded-lg p-8">
+                    <div className="w-24 h-24 bg-slate-400 rounded-lg flex items-center justify-center">
+                      <svg className="w-12 h-12 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -554,67 +830,15 @@ const Home = () => {
             </p>
           </div>
 
-          {/* Expertise Cards */}
-          <div className="grid md:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {/* Biostatistics Card - Takes 2 columns (wider) */}
+          {/* Expertise Cards - Lego Style */}
+          <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            {/* Card 1: Biostatistics - 2x width */}
             <div className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
-              <div className="mb-6">
-                <span className="text-gray-400 text-sm">Biostatistics</span>
-              </div>
-              <h3 className="text-white text-2xl font-light mb-6 leading-tight">
-                <EditableText
-                  value={pageContent.specialisms.biostatistics.title}
-                  onChange={(value) => updateContent('specialisms.biostatistics.title', value)}
-                  multiline={true}
-                  rows={2}
-                  placeholder="Enter biostatistics title..."
-                  className="text-white text-2xl font-light leading-tight block w-full"
-                />
-              </h3>
-              <div className="flex items-center justify-between">
-                <span className="bg-white/20 text-white px-3 py-1 rounded-full text-xs backdrop-blur-sm shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
-                  <EditableText
-                    value={pageContent.specialisms.biostatistics.tag}
-                    onChange={(value) => updateContent('specialisms.biostatistics.tag', value)}
-                    placeholder="Tag..."
-                    className="text-white text-xs"
-                  />
-                </span>
-              </div>
-              <div className="absolute bottom-8 left-8">
-                <span className="text-white text-sm flex items-center gap-1">
-                  Explore
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </span>
-              </div>
-            </div>
-
-            {/* Clinical Data Management Card - Takes 1 column */}
-            <div className="md:col-span-1 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-white bg-opacity-10 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-              </div>
               <h3 className="text-white text-2xl font-light mb-4 leading-tight">
-                <EditableText
-                  value={pageContent.specialisms.clinicalData.title}
-                  onChange={(value) => updateContent('specialisms.clinicalData.title', value)}
-                  placeholder="Enter clinical data title..."
-                  className="text-white text-2xl font-light leading-tight block w-full"
-                />
+                Biostatistics
               </h3>
-              <p className="text-gray-400 text-sm mb-8">
-                <EditableText
-                  value={pageContent.specialisms.clinicalData.description}
-                  onChange={(value) => updateContent('specialisms.clinicalData.description', value)}
-                  placeholder="Enter clinical data description..."
-                  className="text-gray-400 text-sm block w-full"
-                />
+              <p className="text-gray-300 text-sm mb-8 leading-relaxed">
+                Advanced statistical analysis and methodology for clinical trials and research studies.
               </p>
               <div className="absolute bottom-8 left-8">
                 <span className="text-white text-sm flex items-center gap-1">
@@ -626,30 +850,67 @@ const Home = () => {
               </div>
             </div>
 
-            {/* Bioinformatics Card - Takes 1 column */}
-            <div className="md:col-span-1 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-white bg-opacity-10 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-              </div>
+            {/* Card 2: Clinical Data Management - 1x width */}
+            <div className="bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
               <h3 className="text-white text-2xl font-light mb-4 leading-tight">
-                <EditableText
-                  value={pageContent.specialisms.bioinformatics.title}
-                  onChange={(value) => updateContent('specialisms.bioinformatics.title', value)}
-                  placeholder="Enter bioinformatics title..."
-                  className="text-white text-2xl font-light leading-tight block w-full"
-                />
+                Clinical Data<br />Management
               </h3>
-              <p className="text-gray-400 text-sm mb-8">
-                <EditableText
-                  value={pageContent.specialisms.bioinformatics.description}
-                  onChange={(value) => updateContent('specialisms.bioinformatics.description', value)}
-                  placeholder="Enter bioinformatics description..."
-                  className="text-gray-400 text-sm block w-full"
-                />
+              <p className="text-gray-300 text-sm mb-8 leading-relaxed">
+                Comprehensive data handling and regulatory compliance.
+              </p>
+              <div className="absolute bottom-8 left-8">
+                <span className="text-white text-sm flex items-center gap-1">
+                  Explore
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            {/* Card 3: Statistical Programming - 1x width */}
+            <div className="bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+              <h3 className="text-white text-2xl font-light mb-4 leading-tight">
+                Statistical<br />Programming
+              </h3>
+              <p className="text-gray-300 text-sm mb-8 leading-relaxed">
+                SAS, R, and Python programming for clinical research.
+              </p>
+              <div className="absolute bottom-8 left-8">
+                <span className="text-white text-sm flex items-center gap-1">
+                  Explore
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            {/* Card 4: Data Science - 2x width (second row) */}
+            <div className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+              <h3 className="text-white text-2xl font-light mb-4 leading-tight">
+                Data Science
+              </h3>
+              <p className="text-gray-300 text-sm mb-8 leading-relaxed">
+                Machine learning and AI-driven insights for pharmaceutical innovation and biomarker discovery.
+              </p>
+              <div className="absolute bottom-8 left-8">
+                <span className="text-white text-sm flex items-center gap-1">
+                  Explore
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            {/* Card 5: Bioinformatics - 2x width (second row) */}
+            <div className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+              <h3 className="text-white text-2xl font-light mb-4 leading-tight">
+                Bioinformatics
+              </h3>
+              <p className="text-gray-300 text-sm mb-8 leading-relaxed">
+                Computational biology and genomics expertise for precision medicine and biomarker development.
               </p>
               <div className="absolute bottom-8 left-8">
                 <span className="text-white text-sm flex items-center gap-1">
@@ -665,7 +926,7 @@ const Home = () => {
       </div>
 
       {/* Featured Opportunities Section */}
-      <section className="bg-white py-20">
+      <section className="bg-white py-20 opacity-0" data-animate>
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Jobs</p>
@@ -678,76 +939,85 @@ const Home = () => {
           </div>
 
           {/* Job Cards */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
-            {/* Principal Biostatistician Job */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow">
-              {/* Job Image Placeholder */}
-              <div className="h-48 bg-gray-300 flex items-center justify-center">
-                <div className="w-16 h-16 bg-gray-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                  </svg>
+          <div className="grid md:grid-cols-3 gap-6 max-w-7xl mx-auto mb-12">
+            {featuredJobs.length > 0 ? (
+              featuredJobs.map((job) => (
+                <div 
+                  key={job.id} 
+                  className={`bg-white rounded-lg shadow-lg overflow-hidden border hover:shadow-xl transition-shadow ${
+                    job.featured ? 'border-yellow-400 ring-2 ring-yellow-400/20' : 'border-gray-200'
+                  }`}
+                >
+                  {job.featured && (
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-3 py-1 text-center">
+                      ⭐ FEATURED JOB
+                    </div>
+                  )}
+                  
+                  {/* Job Content */}
+                  <div className="p-6">
+                    <div className="flex items-center gap-2 mb-3 flex-wrap">
+                      <span className="text-sm text-gray-600 bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
+                        {job.specialism}
+                      </span>
+                      {job.featured && (
+                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
+                          Featured
+                        </span>
+                      )}
+                    </div>
+                    
+                    <h3 className="text-lg font-semibold mb-2 text-gray-900 leading-tight line-clamp-2">
+                      {job.title}
+                    </h3>
+                    
+                    {job.show_company !== false && (
+                      <p className="text-gray-600 text-sm font-medium mb-2">{job.company}</p>
+                    )}
+                    
+                    <p className="text-gray-600 mb-4 text-sm leading-relaxed line-clamp-3">
+                      {job.description}
+                    </p>
+                    
+                    {job.salary && (
+                      <p className="text-gray-900 font-semibold text-sm mb-4">{job.salary}</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                      <span className="text-xs text-gray-500">{job.contract}</span>
+                      <button 
+                        onClick={() => navigate(`/jobs`)}
+                        className="text-brand-blue hover:text-blue-700 transition-colors flex items-center gap-1 text-sm font-medium"
+                      >
+                        View details
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Job Content */}
-              <div className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">Biostatistics</span>
-                  <span className="text-sm text-gray-500">5 min read</span>
+              ))
+            ) : (
+              // Placeholder when no jobs available
+              <>
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                  <div className="p-6">
+                    <p className="text-gray-500 text-sm">No jobs available</p>
+                  </div>
                 </div>
-                
-                <h3 className="text-xl font-medium mb-3 text-gray-900 leading-tight">
-                  Principal biostatistician role in oncology research
-                </h3>
-                
-                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                  Innovative research opportunity with leading pharmaceutical company
-                </p>
-                
-                <button className="text-brand-blue hover:text-blue-700 transition-colors flex items-center gap-1 text-sm font-medium">
-                  Read more
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Senior Data Scientist Job */}
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow">
-              {/* Job Image Placeholder */}
-              <div className="h-48 bg-gray-300 flex items-center justify-center">
-                <div className="w-16 h-16 bg-gray-400 rounded-lg flex items-center justify-center">
-                  <svg className="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                  </svg>
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                  <div className="p-6">
+                    <p className="text-gray-500 text-sm">Check back soon</p>
+                  </div>
                 </div>
-              </div>
-              
-              {/* Job Content */}
-              <div className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.15)]">Data science</span>
-                  <span className="text-sm text-gray-500">5 min read</span>
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                  <div className="p-6">
+                    <p className="text-gray-500 text-sm">New opportunities coming</p>
+                  </div>
                 </div>
-                
-                <h3 className="text-xl font-medium mb-3 text-gray-900 leading-tight">
-                  Senior data scientist position in clinical trials
-                </h3>
-                
-                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                  Advanced analytics role supporting global healthcare innovations
-                </p>
-                
-                <button className="text-brand-blue hover:text-blue-700 transition-colors flex items-center gap-1 text-sm font-medium">
-                  Read more
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           {/* View All Jobs Button */}
@@ -763,76 +1033,100 @@ const Home = () => {
       </section>
 
       {/* Trusted by Section */}
-      <section className="bg-green-100 py-16">
+      <section className="bg-brand-blue py-16 opacity-0" data-animate>
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-xl font-light text-gray-900 mb-8">
+            <h2 className="text-2xl md:text-xl font-light text-white mb-8">
               Trusted by leading life-sciences organizations
             </h2>
           </div>
 
           {/* Logo Carousel */}
-          <div className="flex items-center justify-center">
-            <div className="flex items-center space-x-8 md:space-x-12 lg:space-x-16 overflow-hidden">
+          <div className="flex items-center justify-center overflow-hidden">
+            <div className="flex items-center animate-scroll">
               {/* BioNTech Logo */}
-              <div className="flex items-center justify-center h-12">
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
                 <img 
                   src="/partner_companies/BioNTech.png" 
                   alt="BioNTech" 
-                  className="h-8 md:h-10 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
                 />
               </div>
 
               {/* Immatics Logo */}
-              <div className="flex items-center justify-center h-12">
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
                 <img 
                   src="/partner_companies/Immatics.png" 
                   alt="Immatics" 
-                  className="h-8 md:h-10 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
                 />
               </div>
 
               {/* Debiopharm Logo */}
-              <div className="flex items-center justify-center h-12">
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
                 <img 
                   src="/partner_companies/Debiopharm.png" 
                   alt="Debiopharm" 
-                  className="h-8 md:h-10 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
                 />
               </div>
 
               {/* Klifo Logo */}
-              <div className="flex items-center justify-center h-12">
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
                 <img 
                   src="/partner_companies/Klifo-logo.png" 
                   alt="Klifo" 
-                  className="h-8 md:h-10 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
                 />
               </div>
 
               {/* BET Logo */}
-              <div className="flex items-center justify-center h-12">
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
                 <img 
                   src="/partner_companies/BET.webp" 
                   alt="BET" 
-                  className="h-8 md:h-10 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
                 />
               </div>
 
-              {/* Repeat some logos for carousel effect */}
-              <div className="flex items-center justify-center h-12">
+              {/* Duplicate logos for seamless loop */}
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
                 <img 
                   src="/partner_companies/BioNTech.png" 
                   alt="BioNTech" 
-                  className="h-8 md:h-10 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
                 />
               </div>
 
-              <div className="flex items-center justify-center h-12">
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
                 <img 
                   src="/partner_companies/Immatics.png" 
                   alt="Immatics" 
-                  className="h-6 md:h-8 object-contain grayscale hover:grayscale-0 transition-all duration-300"
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
+                />
+              </div>
+
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
+                <img 
+                  src="/partner_companies/Debiopharm.png" 
+                  alt="Debiopharm" 
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
+                />
+              </div>
+
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
+                <img 
+                  src="/partner_companies/Klifo-logo.png" 
+                  alt="Klifo" 
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
+                />
+              </div>
+
+              <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
+                <img 
+                  src="/partner_companies/BET.webp" 
+                  alt="BET" 
+                  className="h-8 md:h-10 object-contain brightness-0 invert"
                 />
               </div>
             </div>
@@ -841,7 +1135,7 @@ const Home = () => {
       </section>
 
       {/* Measuring Excellence Section */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-20 opacity-0" data-animate>
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our impact</p>
@@ -883,13 +1177,20 @@ const Home = () => {
             <div className="lg:col-span-1 order-1 lg:order-2 space-y-12">
               {/* Stat 1 */}
               <div>
-                <div className="text-6xl md:text-7xl font-light text-gray-900 mb-2">
-                  <EditableText
-                    value={pageContent.excellence.stat1.number}
-                    onChange={(value) => updateContent('excellence.stat1.number', value)}
-                    placeholder="Number..."
-                    className="text-6xl md:text-7xl font-light text-gray-900 text-center block w-full"
-                  />
+                <div className="text-6xl md:text-7xl font-light text-gray-900 mb-2 text-center">
+                  {!editMode ? (
+                    <AnimatedCounter
+                      targetValue={pageContent.excellence.stat1.number}
+                      className="text-6xl md:text-7xl font-light text-gray-900 block"
+                    />
+                  ) : (
+                    <EditableText
+                      value={pageContent.excellence.stat1.number}
+                      onChange={(value) => updateContent('excellence.stat1.number', value)}
+                      placeholder="Number..."
+                      className="text-6xl md:text-7xl font-light text-gray-900 text-center block w-full"
+                    />
+                  )}
                 </div>
                 <p className="text-gray-700 text-lg">
                   <EditableText
@@ -903,13 +1204,20 @@ const Home = () => {
 
               {/* Stat 2 */}
               <div>
-                <div className="text-6xl md:text-7xl font-light text-gray-900 mb-2">
-                  <EditableText
-                    value={pageContent.excellence.stat2.number}
-                    onChange={(value) => updateContent('excellence.stat2.number', value)}
-                    placeholder="Number..."
-                    className="text-6xl md:text-7xl font-light text-gray-900 text-center block w-full"
-                  />
+                <div className="text-6xl md:text-7xl font-light text-gray-900 mb-2 text-center">
+                  {!editMode ? (
+                    <AnimatedCounter
+                      targetValue={pageContent.excellence.stat2.number}
+                      className="text-6xl md:text-7xl font-light text-gray-900 block"
+                    />
+                  ) : (
+                    <EditableText
+                      value={pageContent.excellence.stat2.number}
+                      onChange={(value) => updateContent('excellence.stat2.number', value)}
+                      placeholder="Number..."
+                      className="text-6xl md:text-7xl font-light text-gray-900 text-center block w-full"
+                    />
+                  )}
                 </div>
                 <p className="text-gray-700 text-lg">
                   <EditableText
@@ -923,13 +1231,20 @@ const Home = () => {
 
               {/* Stat 3 */}
               <div>
-                <div className="text-6xl md:text-7xl font-light text-gray-900 mb-2">
-                  <EditableText
-                    value={pageContent.excellence.stat3.number}
-                    onChange={(value) => updateContent('excellence.stat3.number', value)}
-                    placeholder="Number..."
-                    className="text-6xl md:text-7xl font-light text-gray-900 text-center block w-full"
-                  />
+                <div className="text-6xl md:text-7xl font-light text-gray-900 mb-2 text-center">
+                  {!editMode ? (
+                    <AnimatedCounter
+                      targetValue={pageContent.excellence.stat3.number}
+                      className="text-6xl md:text-7xl font-light text-gray-900 block"
+                    />
+                  ) : (
+                    <EditableText
+                      value={pageContent.excellence.stat3.number}
+                      onChange={(value) => updateContent('excellence.stat3.number', value)}
+                      placeholder="Number..."
+                      className="text-6xl md:text-7xl font-light text-gray-900 text-center block w-full"
+                    />
+                  )}
                 </div>
                 <p className="text-gray-700 text-lg">
                   <EditableText
@@ -945,101 +1260,19 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Value Proposition Section */}
-      <section className="bg-white py-20">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Why choose us</p>
-            <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Our unique value proposition
-            </h2>
-            <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Specialized recruitment strategies that deliver exceptional results
-            </p>
-          </div>
-
-          {/* Cards Grid */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {/* Speed Card - Takes full width on medium screens, spans 2 columns */}
-            <div className="md:col-span-2 lg:col-span-1 bg-gray-700 rounded-lg p-8 text-white relative overflow-hidden">
-              <div className="mb-6">
-                <span className="text-gray-300 text-sm uppercase tracking-wide">Speed</span>
-              </div>
-              <h3 className="text-3xl md:text-4xl font-light mb-8 leading-tight">
-                Rapid talent acquisition with precision and efficiency
-              </h3>
-              <div className="mb-8">
-                <span className="text-gray-300 text-sm">Hire talent</span>
-              </div>
-              <div className="absolute bottom-8 left-8">
-                <span className="text-white text-sm flex items-center gap-1">
-                  Explore
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </span>
-              </div>
-              {/* Background decoration */}
-              <div className="absolute bottom-4 right-4 w-16 h-16 bg-gray-600 rounded-lg opacity-30"></div>
-            </div>
-
-            {/* Rigorous Screening Card */}
-            <div className="bg-gray-700 rounded-lg p-8 text-white relative">
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-white bg-opacity-10 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-2xl font-light mb-8 leading-tight">
-                Rigorous candidate screening and assessment
-              </h3>
-              <div className="absolute bottom-8 left-8">
-                <span className="text-white text-sm flex items-center gap-1">
-                  Explore
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </span>
-              </div>
-            </div>
-
-            {/* Industry Standards Card */}
-            <div className="bg-gray-700 rounded-lg p-8 text-white relative">
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-white bg-opacity-10 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                  </svg>
-                </div>
-              </div>
-              <h3 className="text-2xl font-light mb-8 leading-tight">
-                Strict adherence to industry regulations and standards
-              </h3>
-              <div className="absolute bottom-8 left-8">
-                <span className="text-white text-sm flex items-center gap-1">
-                  Explore
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Value Proposition Section - Parallax */}
+      <ParallaxUSPSection />
 
       {/* Testimonials Section */}
-      <section className="py-20" style={{backgroundColor: '#d7e5fd'}}>
+      <section className="bg-brand-blue py-20 opacity-0" data-animate>
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-xl md:text-2xl font-light text-gray-900 leading-relaxed">
+            <h2 className="text-xl md:text-2xl font-light text-white leading-relaxed">
               <EditableText
                 value={pageContent.testimonials.title}
                 onChange={(value) => updateContent('testimonials.title', value)}
                 placeholder="Enter testimonials title..."
-                className="text-xl md:text-2xl font-light text-gray-900 leading-relaxed text-center block w-full"
+                className="text-xl md:text-2xl font-light text-white leading-relaxed text-center block w-full"
               />
             </h2>
           </div>
@@ -1054,15 +1287,15 @@ const Home = () => {
       </section>
 
       {/* Content Section */}
-      <section className="py-20" style={{backgroundColor: '#d7e5fd'}}>
+      <section className="bg-brand-blue py-20 opacity-0" data-animate>
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto items-center">
             {/* Image Section */}
             <div className="order-2 lg:order-1">
-              <div className="bg-blue-300 rounded-lg overflow-hidden shadow-lg aspect-[4/3] flex items-center justify-center relative">
-                <div className="bg-blue-400 bg-opacity-70 rounded-lg p-8 absolute bottom-8 left-8 right-8">
-                  <div className="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg aspect-[4/3] flex items-center justify-center relative">
+                <div className="bg-white/30 backdrop-blur-md rounded-lg p-8 absolute bottom-8 left-8 right-8">
+                  <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
+                    <svg className="w-8 h-8 text-brand-blue" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 5v14l11-7z"/>
                     </svg>
                   </div>
@@ -1073,29 +1306,29 @@ const Home = () => {
             {/* Content Section */}
             <div className="order-1 lg:order-2">
               <div className="mb-4">
-                <span className="text-gray-700 text-sm uppercase tracking-wide">Our Process</span>
+                <span className="text-gray-300 text-sm uppercase tracking-wide">Our Process</span>
               </div>
               
-              <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
+              <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-white">
                 Streamlined recruitment for specialized roles
               </h2>
               
-              <p className="text-gray-700 text-lg mb-12 leading-relaxed">
+              <p className="text-gray-300 text-lg mb-12 leading-relaxed">
                 Our proven methodology combines deep industry expertise with cutting-edge recruitment technology to deliver exceptional candidates who drive innovation in life sciences and biometrics.
               </p>
 
               {/* Subheadings Grid */}
               <div className="grid md:grid-cols-2 gap-8 mb-12">
                 <div>
-                  <h3 className="text-xl font-medium mb-4 text-gray-900">Expert Screening</h3>
-                  <p className="text-gray-700 leading-relaxed">
+                  <h3 className="text-xl font-medium mb-4 text-white">Expert Screening</h3>
+                  <p className="text-gray-300 leading-relaxed">
                     Every candidate undergoes rigorous technical and regulatory compliance assessment by our team of life sciences professionals.
                   </p>
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-medium mb-4 text-gray-900">Cultural Fit</h3>
-                  <p className="text-gray-700 leading-relaxed">
+                  <h3 className="text-xl font-medium mb-4 text-white">Cultural Fit</h3>
+                  <p className="text-gray-300 leading-relaxed">
                     We ensure candidates align with your organization's values and working style for long-term success and retention.
                   </p>
                 </div>
@@ -1105,13 +1338,13 @@ const Home = () => {
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => navigate('/hire-talent')}
-                  className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-3 rounded transition-all duration-300 shadow-[0_2px_4px_rgba(0,0,0,0.15)] font-medium"
+                  className="bg-white hover:bg-gray-100 text-brand-blue px-6 py-3 rounded transition-all duration-300 shadow-[0_2px_4px_rgba(0,0,0,0.15)] font-medium"
                 >
                   Start Hiring
                 </button>
                 <button 
                   onClick={() => navigate('/find-jobs')}
-                  className="text-gray-900 hover:bg-gray-900/10 px-6 py-3 rounded transition-all duration-300 shadow-[0_2px_4px_rgba(0,0,0,0.15)] flex items-center gap-1 font-medium"
+                  className="text-white hover:bg-white/10 border border-white/30 hover:border-white/50 px-6 py-3 rounded transition-all duration-300 flex items-center gap-1 font-medium"
                 >
                   Find Jobs
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1125,7 +1358,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gray-50 py-20">
+      <section className="bg-gray-50 py-20 opacity-0" data-animate>
         <div className="container mx-auto px-6">
           <div className="text-center max-w-4xl mx-auto">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">

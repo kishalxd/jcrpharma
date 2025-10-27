@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 
 const Jobs = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -15,6 +16,9 @@ const Jobs = () => {
   });
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'grid'
   const [sortBy, setSortBy] = useState('recent');
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const popularSearches = [
     'Biostatistician', 'Clinical Data Manager', 'SAS Programmer', 'Bioinformatics',
@@ -32,98 +36,30 @@ const Jobs = () => {
     skills: ['SAS', 'R', 'Python', 'SQL', 'CDISC', 'ADaM', 'SDTM', 'TLFs']
   };
 
-  const jobListings = [
-    {
-      id: 1,
-      title: 'Senior Biostatistician - Oncology',
-      company: 'Global Pharma Inc.',
-      location: 'London, UK',
-      workMode: 'Hybrid',
-      contract: 'Permanent',
-      salary: '£80,000 - £95,000',
-      posted: '2 days ago',
-      specialism: 'Biostatistics',
-      seniority: 'Senior Level',
-      description: 'Lead statistical programming and analysis for Phase III oncology trials. Expertise in SAS, R, and CDISC standards required.',
-      skills: ['SAS', 'R', 'CDISC', 'Oncology', 'Phase III'],
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'Clinical Data Manager',
-      company: 'BioTech Solutions',
-      location: 'Cambridge, UK',
-      workMode: 'Onsite',
-      contract: 'Contract',
-      salary: '£450 - £550 per day',
-      posted: '1 day ago',
-      specialism: 'Clinical Data Management',
-      seniority: 'Mid Level',
-      description: 'Manage clinical trial databases and ensure data quality across multiple therapeutic areas.',
-      skills: ['EDC', 'Data Quality', 'Clinical Trials', 'GCP'],
-      featured: false
-    },
-    {
-      id: 3,
-      title: 'Principal Bioinformatics Scientist',
-      company: 'Genomics Research Ltd',
-      location: 'Oxford, UK',
-      workMode: 'Remote',
-      contract: 'Permanent',
-      salary: '£90,000 - £110,000',
-      posted: '3 days ago',
-      specialism: 'Bioinformatics',
-      seniority: 'Senior Level',
-      description: 'Drive computational biology initiatives for precision medicine programs. NGS analysis and machine learning experience essential.',
-      skills: ['Python', 'NGS', 'Machine Learning', 'Genomics'],
-      featured: true
-    },
-    {
-      id: 4,
-      title: 'Statistical Programmer - CDISC',
-      company: 'CRO Excellence',
-      location: 'Manchester, UK',
-      workMode: 'Hybrid',
-      contract: 'Permanent',
-      salary: '£55,000 - £70,000',
-      posted: '5 days ago',
-      specialism: 'Biostatistics',
-      seniority: 'Mid Level',
-      description: 'Develop and validate statistical programming deliverables for regulatory submissions.',
-      skills: ['SAS', 'CDISC', 'ADaM', 'SDTM'],
-      featured: false
-    },
-    {
-      id: 5,
-      title: 'Medical Science Liaison',
-      company: 'International Pharma',
-      location: 'Edinburgh, UK',
-      workMode: 'Hybrid',
-      contract: 'Permanent',
-      salary: '£75,000 - £85,000',
-      posted: '1 week ago',
-      specialism: 'Medical Affairs',
-      seniority: 'Senior Level',
-      description: 'Provide scientific support and medical expertise for oncology portfolio across UK and Ireland.',
-      skills: ['Medical Communications', 'Oncology', 'Scientific Writing'],
-      featured: false
-    },
-    {
-      id: 6,
-      title: 'Regulatory Affairs Director',
-      company: 'MedDevice Corp',
-      location: 'London, UK',
-      workMode: 'Onsite',
-      contract: 'Permanent',
-      salary: '£120,000 - £140,000',
-      posted: '1 week ago',
-      specialism: 'Regulatory Affairs',
-      seniority: 'Director Level',
-      description: 'Lead regulatory strategy for medical device submissions across EU and US markets.',
-      skills: ['FDA', 'CE Mark', 'Medical Devices', 'Regulatory Strategy'],
-      featured: true
+  // Fetch jobs from database
+  const fetchJobs = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase
+        .from('jobs')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setJobs(data || []);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      setError('Failed to load jobs. Please try again later.');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
 
   const toggleFilter = (category, value) => {
     setSelectedFilters(prev => ({
@@ -148,28 +84,147 @@ const Jobs = () => {
   };
 
   const getFilteredJobs = () => {
-    return jobListings.filter(job => {
-      // Apply filters here - simplified for demo
+    return jobs.filter(job => {
+      // Keyword search
+      if (searchKeyword) {
+        const keyword = searchKeyword.toLowerCase();
+        const matchesKeyword = 
+          job.title.toLowerCase().includes(keyword) ||
+          job.company.toLowerCase().includes(keyword) ||
+          job.description.toLowerCase().includes(keyword) ||
+          job.skills.some(skill => skill.toLowerCase().includes(keyword));
+        
+        if (!matchesKeyword) return false;
+      }
+
+      // Location search
+      if (searchLocation) {
+        const location = searchLocation.toLowerCase();
+        if (!job.location.toLowerCase().includes(location)) return false;
+      }
+
+      // Specialism filter
+      if (selectedFilters.specialism.length > 0) {
+        if (!selectedFilters.specialism.includes(job.specialism)) return false;
+      }
+
+      // Contract filter
+      if (selectedFilters.contract.length > 0) {
+        if (!selectedFilters.contract.includes(job.contract)) return false;
+      }
+
+      // Seniority filter
+      if (selectedFilters.seniority.length > 0) {
+        if (!selectedFilters.seniority.includes(job.seniority)) return false;
+      }
+
+      // Work mode filter
+      if (selectedFilters.workMode.length > 0) {
+        if (!selectedFilters.workMode.includes(job.work_mode)) return false;
+      }
+
+      // Location filter
+      if (selectedFilters.location.length > 0) {
+        const jobLocation = job.location.split(',')[0].trim(); // Get city part
+        if (!selectedFilters.location.some(loc => jobLocation.toLowerCase().includes(loc.toLowerCase()))) return false;
+      }
+
+      // Skills filter
+      if (selectedFilters.skills.length > 0) {
+        if (!selectedFilters.skills.some(skill => job.skills.includes(skill))) return false;
+      }
+
+      // Posted date filter
+      if (selectedFilters.posted) {
+        const jobDate = new Date(job.created_at);
+        const now = new Date();
+        const daysDiff = Math.floor((now - jobDate) / (1000 * 60 * 60 * 24));
+        
+        switch (selectedFilters.posted) {
+          case '24h':
+            if (daysDiff > 1) return false;
+            break;
+          case '7d':
+            if (daysDiff > 7) return false;
+            break;
+          case '14d':
+            if (daysDiff > 14) return false;
+            break;
+          case '30d':
+            if (daysDiff > 30) return false;
+            break;
+          default:
+            break;
+        }
+      }
+
       return true;
     });
   };
 
   const getSortedJobs = (jobs) => {
-    switch (sortBy) {
-      case 'salary-high':
-        return [...jobs].sort((a, b) => {
-          const aMax = parseInt(a.salary.match(/£(\d+),?(\d+)?/)?.[1] || '0');
-          const bMax = parseInt(b.salary.match(/£(\d+),?(\d+)?/)?.[1] || '0');
-          return bMax - aMax;
-        });
-      case 'salary-low':
-        return [...jobs].sort((a, b) => {
-          const aMax = parseInt(a.salary.match(/£(\d+),?(\d+)?/)?.[1] || '0');
-          const bMax = parseInt(b.salary.match(/£(\d+),?(\d+)?/)?.[1] || '0');
-          return aMax - bMax;
-        });
-      default:
-        return jobs;
+    // First, separate featured and non-featured jobs
+    const featuredJobs = jobs.filter(job => job.featured);
+    const nonFeaturedJobs = jobs.filter(job => !job.featured);
+    
+    // Sort each group separately
+    const sortJobs = (jobList) => {
+      switch (sortBy) {
+        case 'salary-high':
+          return [...jobList].sort((a, b) => {
+            const aMax = parseInt(a.salary?.match(/£(\d+),?(\d+)?/)?.[1] || '0');
+            const bMax = parseInt(b.salary?.match(/£(\d+),?(\d+)?/)?.[1] || '0');
+            return bMax - aMax;
+          });
+        case 'salary-low':
+          return [...jobList].sort((a, b) => {
+            const aMax = parseInt(a.salary?.match(/£(\d+),?(\d+)?/)?.[1] || '0');
+            const bMax = parseInt(b.salary?.match(/£(\d+),?(\d+)?/)?.[1] || '0');
+            return aMax - bMax;
+          });
+        case 'recent':
+          return [...jobList].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        case 'oldest':
+          return [...jobList].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        case 'title-asc':
+          return [...jobList].sort((a, b) => a.title.localeCompare(b.title));
+        case 'title-desc':
+          return [...jobList].sort((a, b) => b.title.localeCompare(a.title));
+        case 'company-asc':
+          return [...jobList].sort((a, b) => a.company.localeCompare(b.company));
+        case 'company-desc':
+          return [...jobList].sort((a, b) => b.company.localeCompare(a.company));
+        default:
+          return jobList;
+      }
+    };
+    
+    // Return featured jobs first, then non-featured jobs
+    return [...sortJobs(featuredJobs), ...sortJobs(nonFeaturedJobs)];
+  };
+
+  const getPostedTime = (createdAt) => {
+    const now = new Date();
+    const jobDate = new Date(createdAt);
+    const diffInMs = now - jobDate;
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minutes ago`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours} hours ago`;
+    } else if (diffInDays === 1) {
+      return '1 day ago';
+    } else if (diffInDays < 7) {
+      return `${diffInDays} days ago`;
+    } else if (diffInDays < 14) {
+      return '1 week ago';
+    } else if (diffInDays < 30) {
+      return `${Math.floor(diffInDays / 7)} weeks ago`;
+    } else {
+      return `${Math.floor(diffInDays / 30)} months ago`;
     }
   };
 
@@ -180,43 +235,38 @@ const Jobs = () => {
     <div className="min-h-screen">
       {/* Hero Header Section */}
       <section className="bg-brand-blue">
-        <div className="container mx-auto px-6 py-20">
-          <div className="text-center text-white mb-16">
-            <h1 className="text-5xl md:text-6xl font-light mb-8 leading-tight">
+        <div className="container mx-auto px-6 py-12">
+          <div className="text-center text-white mb-8">
+            <h1 className="text-3xl md:text-4xl font-light mb-4 leading-tight">
               Find your next role in<br />
               biometrics & data
             </h1>
-            <p className="text-gray-300 text-lg md:text-xl mb-12 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-gray-300 text-base md:text-lg mb-8 max-w-3xl mx-auto leading-relaxed">
               Discover specialized opportunities in biostatistics, clinical data management, bioinformatics,<br />
               and medical affairs across leading life-sciences companies.
             </p>
             
             {/* Search Bar */}
-            <div className="max-w-4xl mx-auto mb-12">
-              <div className="bg-white/10 backdrop-blur-md rounded-lg p-6">
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="md:col-span-1">
+            <div className="max-w-4xl mx-auto mb-6">
+              <div className="bg-white/10 backdrop-blur-md rounded-lg p-4">
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
                     <input
                       type="text"
                       placeholder="Job title, keyword, or skill"
                       value={searchKeyword}
                       onChange={(e) => setSearchKeyword(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all"
+                      className="w-full px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all text-sm"
                     />
                   </div>
-                  <div className="md:col-span-1">
+                  <div>
                     <input
                       type="text"
                       placeholder="Location"
                       value={searchLocation}
                       onChange={(e) => setSearchLocation(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all"
+                      className="w-full px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all text-sm"
                     />
-                  </div>
-                  <div className="md:col-span-1">
-                    <button className="w-full bg-white hover:bg-gray-100 text-brand-blue px-6 py-3 rounded-lg transition-all duration-300 font-medium shadow-lg hover:shadow-xl">
-                      Search Jobs
-                    </button>
                   </div>
                 </div>
               </div>
@@ -224,12 +274,13 @@ const Jobs = () => {
 
             {/* Popular Search Chips */}
             <div className="max-w-4xl mx-auto">
-              <p className="text-gray-300 text-sm mb-4">Popular searches:</p>
-              <div className="flex flex-wrap gap-3 justify-center">
+              <p className="text-gray-300 text-xs mb-2">Popular searches:</p>
+              <div className="flex flex-wrap gap-2 justify-center">
                 {popularSearches.map((search, index) => (
                   <button
                     key={index}
-                    className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full text-sm transition-all duration-300 backdrop-blur-sm"
+                    onClick={() => setSearchKeyword(search)}
+                    className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-full text-xs transition-all duration-300 backdrop-blur-sm"
                   >
                     {search}
                   </button>
@@ -241,7 +292,7 @@ const Jobs = () => {
       </section>
 
       {/* Main Content */}
-      <section className="bg-gray-50 py-12">
+      <section className="bg-gray-50 py-6">
         <div className="container mx-auto px-6">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Filters Sidebar */}
@@ -388,8 +439,13 @@ const Jobs = () => {
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm"
                     >
                       <option value="recent">Most recent</option>
+                      <option value="oldest">Oldest first</option>
                       <option value="salary-high">Salary: High to Low</option>
                       <option value="salary-low">Salary: Low to High</option>
+                      <option value="title-asc">Title: A-Z</option>
+                      <option value="title-desc">Title: Z-A</option>
+                      <option value="company-asc">Company: A-Z</option>
+                      <option value="company-desc">Company: Z-A</option>
                     </select>
 
                     {/* View Toggle */}
@@ -419,15 +475,49 @@ const Jobs = () => {
                 </div>
               </div>
 
+              {/* Loading State */}
+              {loading && (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-blue mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading jobs...</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Error State */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-red-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-red-800">{error}</p>
+                  </div>
+                  <button
+                    onClick={fetchJobs}
+                    className="mt-3 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+
               {/* Job Listings */}
-              <div className={`space-y-6 ${viewMode === 'grid' ? 'md:grid md:grid-cols-2 md:gap-6 md:space-y-0' : ''}`}>
-                {sortedJobs.map((job) => (
+              {!loading && !error && (
+                <div className={`space-y-6 ${viewMode === 'grid' ? 'md:grid md:grid-cols-2 md:gap-6 md:space-y-0' : ''}`}>
+                  {sortedJobs.map((job) => (
                   <div
                     key={job.id}
                     className={`bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow ${
                       job.featured ? 'ring-2 ring-brand-blue/20 border-brand-blue/30' : ''
                     }`}
                   >
+                    {job.featured && (
+                      <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white text-xs font-bold px-3 py-1 rounded-t-lg text-center">
+                        ⭐ FEATURED JOB
+                      </div>
+                    )}
                     <div className="p-6">
                       {/* Job Header */}
                       <div className="flex items-start justify-between mb-4">
@@ -442,27 +532,29 @@ const Jobs = () => {
                               </span>
                             )}
                           </div>
-                          <p className="text-gray-600 font-medium mb-1">{job.company}</p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              {job.location}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              job.workMode === 'Remote' ? 'bg-green-100 text-green-800' :
-                              job.workMode === 'Hybrid' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {job.workMode}
-                            </span>
-                          </div>
+                          {job.show_company !== false && (
+                            <p className="text-gray-600 font-medium mb-1">{job.company}</p>
+                          )}
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {job.location}
+                          </span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            job.work_mode === 'Remote' ? 'bg-green-100 text-green-800' :
+                            job.work_mode === 'Hybrid' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {job.work_mode}
+                          </span>
+                        </div>
                         </div>
                         
                         <div className="text-right">
-                          <p className="text-lg font-semibold text-gray-900 mb-1">{job.salary}</p>
+                          <p className="text-lg font-semibold text-gray-900 mb-1">{job.salary || 'Salary not specified'}</p>
                           <p className="text-sm text-gray-500">{job.contract}</p>
                         </div>
                       </div>
@@ -472,14 +564,16 @@ const Jobs = () => {
 
                       {/* Skills Tags */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {job.skills.map((skill, index) => (
+                        {job.skills && job.skills.length > 0 ? job.skills.map((skill, index) => (
                           <span
                             key={index}
                             className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium"
                           >
                             {skill}
                           </span>
-                        ))}
+                        )) : (
+                          <span className="text-gray-400 text-sm">No skills specified</span>
+                        )}
                       </div>
 
                       {/* Job Footer */}
@@ -488,7 +582,7 @@ const Jobs = () => {
                           <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                             {job.specialism}
                           </span>
-                          <span>Posted {job.posted}</span>
+                          <span>Posted {getPostedTime(job.created_at)}</span>
                         </div>
                         
                         <div className="flex items-center gap-3">
@@ -510,7 +604,8 @@ const Jobs = () => {
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
 
               {/* Pagination */}
               <div className="flex justify-center items-center gap-4 mt-8">
@@ -536,7 +631,7 @@ const Jobs = () => {
       </section>
 
       {/* Empty State Feature Section (Hidden when jobs exist) */}
-      {sortedJobs.length === 0 && (
+      {!loading && !error && sortedJobs.length === 0 && (
         <section className="bg-white py-20">
           <div className="container mx-auto px-6">
             <div className="max-w-2xl mx-auto text-center">

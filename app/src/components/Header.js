@@ -136,7 +136,7 @@ const Header = () => {
                 </svg>
               </Link>
               <img 
-                src="/jcr_logo.jpg" 
+                src="/logo_transparent.png" 
                 alt="JCR Logo" 
                 className="h-8 w-auto"
               />
@@ -159,7 +159,7 @@ const Header = () => {
             <div className="flex justify-start">
               <Link to="/" className="flex items-center">
                 <img 
-                  src="/jcr_logo.jpg" 
+                  src="/logo_transparent.png" 
                   alt="JCR Logo" 
                   className={`w-auto transition-all duration-500 ease-in-out ${
                     isScrolled ? 'h-8' : 'h-10'

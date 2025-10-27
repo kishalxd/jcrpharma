@@ -3,6 +3,7 @@ import { useAdmin } from '../components/AdminContext';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import BlogManager from '../components/BlogManager';
+import JobManager from '../components/JobManager';
 
 // Simple page edit components
 const SimplePageEdit = ({ pageName, onSave }) => {
@@ -1345,19 +1346,7 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
         );
       
       case 'job-board':
-        return (
-          <div className="bg-white flex items-center justify-center min-h-full">
-            <div className="max-w-2xl mx-auto text-center">
-              <img 
-                src="/building.jpg" 
-                alt="Under Construction" 
-                className="w-full h-auto rounded-lg mb-6"
-              />
-              <h3 className="text-2xl font-bold text-black mb-2">Job Board Coming Soon</h3>
-              <p className="text-black">Job management system is currently under development.</p>
-            </div>
-          </div>
-        );
+        return <JobManager />;
       
       case 'edit-pages':
         return (
