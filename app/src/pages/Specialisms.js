@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 const Specialisms = () => {
+  const [searchParams] = useSearchParams();
   const [activeSpecialism, setActiveSpecialism] = useState('biostatistics');
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -9,13 +11,25 @@ const Specialisms = () => {
       title: 'Biostatistics Recruitment',
       description: 'Connect with top statistical programming talent for clinical research and regulatory submissions.',
       features: ['Statistical Programming', 'Clinical Data Analysis', 'Regulatory Compliance', 'SAS/R Programming'],
-      roles: ['Senior Biostatistician', 'Statistical Programmer', 'Principal Biostatistician', 'Stats Director']
+      roles: ['Senior Biostatistician', 'Statistical Programmer', 'Principal Biostatistician', 'Statistics Director']
     },
     clinical: {
       title: 'Clinical Data Management',
       description: 'Find experts in clinical data handling, database design, and regulatory compliance.',
       features: ['Database Design', 'Data Quality', 'EDC Systems', 'Regulatory Standards'],
       roles: ['CDM Manager', 'Data Manager', 'CDM Director', 'Database Developer']
+    },
+    'statistical-programming': {
+      title: 'Statistical Programming',
+      description: 'Specialised SAS, R, and Python programming talent for clinical research and regulatory submissions.',
+      features: ['SAS Programming', 'R Programming', 'Python Programming', 'CDISC Standards'],
+      roles: ['Senior Statistical Programmer', 'Principal Statistical Programmer', 'Statistical Programming Manager', 'Lead SAS Programmer']
+    },
+    'data-science': {
+      title: 'Data Science',
+      description: 'Machine learning and AI-driven insights for pharmaceutical innovation and biomarker discovery.',
+      features: ['Machine Learning', 'AI Development', 'Biomarker Discovery', 'Predictive Analytics'],
+      roles: ['Senior Data Scientist', 'Principal Data Scientist', 'Data Science Manager', 'AI/ML Engineer']
     },
     bioinformatics: {
       title: 'Bioinformatics',
@@ -31,36 +45,63 @@ const Specialisms = () => {
     }
   };
 
+  // Handle URL parameters to set the active specialism
+  useEffect(() => {
+    const focusParam = searchParams.get('focus');
+    if (focusParam && specialisms[focusParam]) {
+      setActiveSpecialism(focusParam);
+    }
+  }, [searchParams, specialisms]);
+
   const timeline = [
     {
       step: 1,
-      title: 'Initial Consultation',
-      description: 'We understand your specific recruitment needs and technical requirements.',
-      duration: '1-2 days'
+      title: 'Understand You First',
+      description: 'We build a deep understanding of your business culture, goals, values, pipeline projects, growth objectives, and what makes you stand out in the market.',
+      duration: '1-2 days',
+      details: ['Company culture assessment', 'Business goals analysis', 'Growth objectives review', 'Market positioning evaluation']
     },
     {
       step: 2,
-      title: 'Candidate Sourcing',
-      description: 'Targeted search across our specialized network and industry databases.',
-      duration: '3-5 days'
+      title: 'Define Your Ideal Candidate',
+      description: 'We identify the perfect candidate profile including non-negotiables, nice-to-haves, personality traits, and target companies for headhunting.',
+      duration: '1 day',
+      details: ['CV requirements mapping', 'Skills prioritization', 'Personality profiling', 'Target company identification']
     },
     {
       step: 3,
-      title: 'Technical Screening',
-      description: 'Comprehensive assessment of technical skills and domain expertise.',
-      duration: '2-3 days'
+      title: 'The Search',
+      description: 'Dual approach: searching our 10+ year database of biometric/bioinformatic professionals and proactive headhunting through multiple channels.',
+      duration: '3-5 days',
+      details: ['Database search', 'Cold calling campaigns', 'LinkedIn outreach', 'Industry platform promotion', 'Competitor targeting', 'Referral generation']
     },
     {
       step: 4,
-      title: 'Client Interviews',
-      description: 'Coordinated interview process with shortlisted candidates.',
-      duration: '1-2 weeks'
+      title: 'Candidate Shortlisting',
+      description: 'Rigorous screening process including initial 20-minute calls, role presentation, and detailed information sharing before moving candidates forward.',
+      duration: '2-3 days',
+      details: ['Initial screening calls', 'Role presentation', 'Information package delivery', 'Interest confirmation']
     },
     {
       step: 5,
-      title: 'Offer & Onboarding',
-      description: 'Support through offer negotiation and seamless onboarding.',
-      duration: '1 week'
+      title: 'Deep Pre-screening',
+      description: 'Comprehensive follow-up calls covering financial expectations, skills assessment, detailed profiling, and ensuring full understanding of the opportunity.',
+      duration: '1-2 days',
+      details: ['Financial expectations review', 'Skills checklist completion', 'Detailed candidate profiling', 'Opportunity clarification']
+    },
+    {
+      step: 6,
+      title: 'Ongoing Collaboration',
+      description: 'Continuous support through weekly updates, interview coordination, candidate preparation, and structured feedback collection throughout the process.',
+      duration: '1-2 weeks',
+      details: ['Weekly update calls', 'Interview scheduling', 'Candidate preparation', 'Feedback collection and sharing']
+    },
+    {
+      step: 7,
+      title: 'Closing the Offer',
+      description: 'Proactive management of potential obstacles, deep understanding of candidate motivations, and strategic positioning to maximize offer acceptance rates.',
+      duration: '3-5 days',
+      details: ['Counteroffer management', 'Decision tracking', 'Motivation analysis', 'Strategic positioning']
     }
   ];
 
@@ -77,10 +118,10 @@ const Specialisms = () => {
     },
     {
       id: 2,
-      title: 'Bioinformatics Center of Excellence',
+      title: 'Bioinformatics Centre of Excellence',
       category: 'Bioinformatics',
       client: 'Leading Biotech Company',
-      challenge: 'Building specialized genomics team for precision medicine initiative',
+      challenge: 'Building specialised genomics team for precision medicine initiative',
       solution: 'Recruited PhD-level bioinformaticians with NGS and ML expertise',
       result: '3 successful drug targets identified, $50M Series B funding secured',
       image: '/placeholder-case-study-2.jpg'
@@ -100,7 +141,7 @@ const Specialisms = () => {
   const faqs = [
     {
       question: 'What specialisms do you cover in life sciences recruitment?',
-      answer: 'We specialize in biostatistics, clinical data management, bioinformatics, medical affairs, regulatory affairs, and clinical research. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies.'
+      answer: 'We specialise in biostatistics, clinical data management, bioinformatics, medical affairs, regulatory affairs, and clinical research. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies.'
     },
     {
       question: 'How long does the typical recruitment process take?',
@@ -188,7 +229,7 @@ const Specialisms = () => {
               Our recruitment expertise
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Delivering specialized talent solutions with unmatched speed, quality, compliance, and global reach
+              Delivering specialised talent solutions with unmatched speed, quality, compliance, and global reach
             </p>
           </div>
 
@@ -203,7 +244,7 @@ const Specialisms = () => {
               </div>
               <h3 className="text-xl font-medium mb-4 text-gray-900">Speed</h3>
               <p className="text-gray-600 leading-relaxed">
-                Average 14-day time-to-hire with our specialized network and streamlined processes
+                Average 14-day time-to-hire with our specialised network and streamlined processes
               </p>
             </div>
 
@@ -257,7 +298,7 @@ const Specialisms = () => {
                 <div key={index} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
                   <div className="flex items-center justify-between">
                     <h4 className="text-lg font-medium text-gray-900">{role}</h4>
-                    <button className="text-brand-blue hover:text-blue-700 transition-colors">
+                    <button className="text-brand-blue hover:text-brand-blue/80 transition-colors">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -279,7 +320,7 @@ const Specialisms = () => {
               Recruitment process timeline
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              A streamlined 5-step process designed to deliver exceptional candidates quickly and efficiently
+              A structured 7-step methodology built on 10+ years of biometric and bioinformatic recruitment expertise
             </p>
           </div>
 
@@ -291,7 +332,7 @@ const Specialisms = () => {
               {timeline.map((item, index) => (
                 <div key={index} className={`relative flex items-center mb-12 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
                   {/* Step Number */}
-                  <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-blue-600 rounded-full items-center justify-center z-10 shadow-lg">
+                  <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-brand-blue rounded-full items-center justify-center z-10 shadow-lg">
                     <span className="text-white font-bold text-sm">{item.step}</span>
                   </div>
                   
@@ -299,7 +340,7 @@ const Specialisms = () => {
                   <div className={`w-full md:w-5/12 ${index % 2 === 0 ? 'md:pr-16' : 'md:pl-16'}`}>
                     <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
                       <div className="flex items-center mb-4 md:hidden">
-                        <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-4 shadow-md">
+                        <div className="w-8 h-8 bg-brand-blue rounded-full flex items-center justify-center mr-4 shadow-md">
                           <span className="text-white text-sm font-bold">{item.step}</span>
                         </div>
                         <span className="text-gray-500 text-sm font-medium">{item.duration}</span>
@@ -307,7 +348,23 @@ const Specialisms = () => {
                       
                       <h3 className="text-xl font-semibold mb-3 text-gray-900">{item.title}</h3>
                       <p className="text-gray-600 mb-4 leading-relaxed">{item.description}</p>
-                      <span className="hidden md:inline-block text-blue-600 text-sm font-semibold bg-blue-50 px-3 py-1 rounded-full">{item.duration}</span>
+                      
+                      {/* Key Activities */}
+                      {item.details && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-medium text-gray-700 mb-2">Key Activities:</h4>
+                          <ul className="text-sm text-gray-600 space-y-1">
+                            {item.details.map((detail, detailIndex) => (
+                              <li key={detailIndex} className="flex items-center">
+                                <div className="w-1.5 h-1.5 bg-brand-blue rounded-full mr-2 flex-shrink-0"></div>
+                                {detail}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      <span className="hidden md:inline-block text-brand-blue text-sm font-semibold bg-brand-blue/10 px-3 py-1 rounded-full">{item.duration}</span>
                     </div>
                   </div>
                 </div>
@@ -360,7 +417,7 @@ const Specialisms = () => {
                     <span className="font-medium">Result:</span> {study.result}
                   </p>
                   
-                  <button className="text-brand-blue hover:text-blue-700 transition-colors flex items-center gap-1 text-sm font-medium">
+                  <button className="text-brand-blue hover:text-brand-blue/80 transition-colors flex items-center gap-1 text-sm font-medium">
                     Read full case study
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -382,7 +439,7 @@ const Specialisms = () => {
               Frequently asked questions
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Common questions about our specialized recruitment process and services
+              Common questions about our specialised recruitment process and services
             </p>
           </div>
 
@@ -425,7 +482,7 @@ const Specialisms = () => {
               journey today
             </h2>
             <p className="text-gray-300 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Get in touch with our specialized recruitment team to discuss your hiring needs and learn how we can help you find the perfect candidates.
+              Get in touch with our specialised recruitment team to discuss your hiring needs and learn how we can help you find the perfect candidates.
             </p>
             
             {/* Contact Form */}
@@ -503,7 +560,7 @@ const Specialisms = () => {
           <div className="container mx-auto px-6">
             <div className="text-center mb-20">
               <h2 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
-                Connect with specialized talent today
+                Connect with specialised talent today
               </h2>
               <p className="text-gray-300 text-lg mb-10 max-w-3xl mx-auto leading-relaxed">
                 Join hundreds of life-sciences companies who trust us to deliver exceptional recruitment results.
@@ -516,7 +573,7 @@ const Specialisms = () => {
                   placeholder="Enter your email"
                   className="flex-1 px-5 py-3 rounded-full bg-transparent border border-white/30 text-white placeholder-gray-400 focus:outline-none focus:border-white/50 text-sm"
                 />
-                <button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-full transition-all duration-300 font-medium text-sm">
+                <button className="bg-brand-blue hover:bg-brand-blue/90 text-white px-8 py-3 rounded-full transition-all duration-300 font-medium text-sm">
                   Subscribe
                 </button>
               </div>
@@ -531,10 +588,18 @@ const Specialisms = () => {
               {/* Logo */}
               <div className="lg:col-span-1">
                 <div className="mb-8">
-                  <span className="text-2xl font-light italic">Logo</span>
+                  <img 
+                    src="/jcr_white_transparent.png" 
+                    alt="JCR Pharma" 
+                    className="h-12 w-auto object-cover"
+                    style={{
+                      clipPath: 'inset(20% 0 20% 0)',
+                      transform: 'scaleY(1.67)'
+                    }}
+                  />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">
-                  Specialized recruitment for life-sciences data and biometrics roles.
+                  Specialised recruitment for life-sciences data and biometrics roles.
                 </p>
               </div>
 

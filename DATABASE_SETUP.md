@@ -106,7 +106,26 @@ CREATE INDEX idx_page_contents_page_name ON page_contents(page_name);
 CREATE INDEX idx_page_contents_updated_at ON page_contents(updated_at DESC);
 ```
 
-### 5. Disable RLS (for now)
+### 5. Newsletter Subscriptions Table (`newsletter_subscriptions`)
+
+```sql
+-- Create the newsletter subscriptions table
+CREATE TABLE public.newsletter_subscriptions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'unsubscribed')),
+    source TEXT DEFAULT 'website',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_newsletter_subscriptions_email ON newsletter_subscriptions(email);
+CREATE INDEX idx_newsletter_subscriptions_status ON newsletter_subscriptions(status);
+CREATE INDEX idx_newsletter_subscriptions_created_at ON newsletter_subscriptions(created_at DESC);
+```
+
+### 6. Disable RLS (for now)
 
 ```sql
 -- Disable RLS for all tables (following the same pattern as your existing tables)
@@ -114,6 +133,7 @@ ALTER TABLE public.employee_applications DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.hiring_requests DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.jobs DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.page_contents DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.newsletter_subscriptions DISABLE ROW LEVEL SECURITY;
 ```
 
 ## Table Structures
@@ -178,6 +198,17 @@ ALTER TABLE public.page_contents DISABLE ROW LEVEL SECURITY;
 | `id` | UUID | Primary key | Auto-generated |
 | `page_name` | TEXT | Page identifier | NOT NULL, UNIQUE |
 | `content` | JSONB | Page content data | NOT NULL, Default: '{}' |
+| `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
+| `updated_at` | TIMESTAMP | Last update timestamp | Auto-generated |
+
+### Newsletter Subscriptions Table
+
+| Column | Type | Description | Constraints |
+|--------|------|-------------|-------------|
+| `id` | UUID | Primary key | Auto-generated |
+| `email` | TEXT | Subscriber's email | NOT NULL, UNIQUE |
+| `status` | TEXT | Subscription status | Default: 'active', CHECK constraint |
+| `source` | TEXT | Subscription source | Default: 'website' |
 | `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
 | `updated_at` | TIMESTAMP | Last update timestamp | Auto-generated |
 
@@ -252,6 +283,10 @@ REACT_APP_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_supabase_anon_key
 - `active` - Job is live and accepting applications
 - `archived` - Job is no longer accepting applications but kept for reference
 - `draft` - Job is being prepared and not yet published
+
+### Newsletter Subscriptions
+- `active` - Subscriber is active and receiving newsletters
+- `unsubscribed` - Subscriber has opted out of newsletters
 
 ### Work Modes (Jobs)
 - `Remote` - Fully remote work

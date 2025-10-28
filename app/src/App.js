@@ -89,6 +89,14 @@ function App() {
               } 
             />
             <Route 
+              path="/admin/newsletter-subscriptions" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboard activeTab="newsletter-subscriptions" />
+                </AdminProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/settings" 
               element={
                 <AdminProtectedRoute>

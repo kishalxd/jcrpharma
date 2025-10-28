@@ -15,6 +15,17 @@ const SimplePageEdit = ({ pageName, onSave }) => {
     fetchPageContent();
   }, [pageName]);
 
+  useEffect(() => {
+    const handleSaveTrigger = () => {
+      handleSave();
+    };
+
+    window.addEventListener('triggerSave', handleSaveTrigger);
+    return () => {
+      window.removeEventListener('triggerSave', handleSaveTrigger);
+    };
+  }, [content]);
+
   const fetchPageContent = async () => {
     try {
       const { data, error } = await supabase
@@ -713,22 +724,6 @@ const SimplePageEdit = ({ pageName, onSave }) => {
 
   return (
     <div className="bg-white shadow-sm">
-      {/* Header Bar */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-black">
-            Edit {pageName.charAt(0).toUpperCase() + pageName.slice(1)} Page
-          </h2>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-brand-blue text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
-      </div>
-      
       {/* Form Content */}
       <div className="p-6">
         {renderPageForm()}
@@ -750,6 +745,7 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
   const [saved, setSaved] = useState(false);
   const [employeeApplications, setEmployeeApplications] = useState([]);
   const [hiringRequests, setHiringRequests] = useState([]);
+  const [newsletterSubscriptions, setNewsletterSubscriptions] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('created_at');
@@ -791,6 +787,24 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
       setHiringRequests(data || []);
     } catch (error) {
       console.error('Error fetching hiring requests:', error);
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  // Fetch newsletter subscriptions
+  const fetchNewsletterSubscriptions = async () => {
+    setLoadingData(true);
+    try {
+      const { data, error } = await supabase
+        .from('newsletter_subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNewsletterSubscriptions(data || []);
+    } catch (error) {
+      console.error('Error fetching newsletter subscriptions:', error);
     } finally {
       setLoadingData(false);
     }
@@ -850,6 +864,21 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
     }
   };
 
+  // Update newsletter subscription status
+  const updateNewsletterStatus = async (id, status) => {
+    try {
+      const { error } = await supabase
+        .from('newsletter_subscriptions')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) throw error;
+      fetchNewsletterSubscriptions(); // Refresh data
+    } catch (error) {
+      console.error('Error updating newsletter subscription status:', error);
+    }
+  };
+
   // Get status color for hiring requests
   const getHiringStatusColor = (status) => {
     const colors = {
@@ -871,6 +900,15 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
       contacted: 'bg-purple-100 text-purple-800 border-purple-200',
       hired: 'bg-green-100 text-green-800 border-green-200',
       rejected: 'bg-red-100 text-red-800 border-red-200'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+  };
+
+  // Get status color for newsletter subscriptions
+  const getNewsletterStatusColor = (status) => {
+    const colors = {
+      active: 'bg-green-100 text-green-800 border-green-200',
+      unsubscribed: 'bg-red-100 text-red-800 border-red-200'
     };
     return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
@@ -952,12 +990,51 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
     return filtered;
   };
 
+  // Filter and sort newsletter subscriptions
+  const getFilteredAndSortedSubscriptions = () => {
+    let filtered = newsletterSubscriptions;
+
+    // Apply search filter
+    if (searchTerm) {
+      filtered = filtered.filter(sub => 
+        sub.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (sub.source && sub.source.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    // Apply status filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(sub => sub.status === filterStatus);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let aValue = a[sortBy];
+      let bValue = b[sortBy];
+
+      if (sortBy === 'created_at' || sortBy === 'updated_at') {
+        aValue = new Date(aValue);
+        bValue = new Date(bValue);
+      }
+
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  };
+
   // Fetch data when tab changes
   useEffect(() => {
     if (activeTab === 'employee-applications') {
       fetchEmployeeApplications();
     } else if (activeTab === 'hiring-requests') {
       fetchHiringRequests();
+    } else if (activeTab === 'newsletter-subscriptions') {
+      fetchNewsletterSubscriptions();
     }
   }, [activeTab]);
 
@@ -1344,6 +1421,119 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
             </div>
           </div>
         );
+
+      case 'newsletter-subscriptions':
+        const filteredSubscriptions = getFilteredAndSortedSubscriptions();
+        return (
+          <div className="bg-white shadow-sm">
+            {/* Search and Filter Bar */}
+            <div className="p-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div className="flex-1 max-w-md">
+                  <div className="relative">
+                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Search by email or source..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <select
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm"
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="unsubscribed">Unsubscribed</option>
+                  </select>
+                  <select
+                    value={`${sortBy}-${sortOrder}`}
+                    onChange={(e) => {
+                      const [field, order] = e.target.value.split('-');
+                      setSortBy(field);
+                      setSortOrder(order);
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue text-sm"
+                  >
+                    <option value="created_at-desc">Newest First</option>
+                    <option value="created_at-asc">Oldest First</option>
+                    <option value="email-asc">Email A-Z</option>
+                    <option value="email-desc">Email Z-A</option>
+                    <option value="status-asc">Status A-Z</option>
+                  </select>
+                  <button
+                    onClick={fetchNewsletterSubscriptions}
+                    disabled={loadingData}
+                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                    title="Refresh"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0V9a8 8 0 1115.356 2M15 15v5h-.582M4.582 15A8.001 8.001 0 0019.418 9m0 0V9a8 8 0 10-15.356 2" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full table-auto">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left py-4 px-6 text-black font-medium text-sm">Email</th>
+                    <th className="text-left py-4 px-6 text-black font-medium text-sm">Source</th>
+                    <th className="text-left py-4 px-6 text-black font-medium text-sm">Status</th>
+                    <th className="text-left py-4 px-6 text-black font-medium text-sm">Subscribed</th>
+                    <th className="text-left py-4 px-6 text-black font-medium text-sm">Last Updated</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredSubscriptions.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="py-8 px-6 text-center text-gray-500">
+                        {loadingData ? 'Loading subscriptions...' : searchTerm || filterStatus !== 'all' ? 'No subscriptions match your search criteria' : 'No newsletter subscriptions found'}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredSubscriptions.map((subscription) => (
+                      <tr key={subscription.id} className="hover:bg-gray-50 transition-colors border-t border-gray-100">
+                        <td className="py-4 px-6 text-black font-medium text-sm">{subscription.email}</td>
+                        <td className="py-4 px-6 text-gray-600 text-sm">{subscription.source || 'website'}</td>
+                        <td className="py-4 px-6">
+                          <select
+                            value={subscription.status}
+                            onChange={(e) => updateNewsletterStatus(subscription.id, e.target.value)}
+                            className={`text-xs px-3 py-2 pr-8 rounded-full border font-medium focus:outline-none focus:ring-2 focus:ring-brand-blue appearance-none cursor-pointer ${getNewsletterStatusColor(subscription.status)}`}
+                            style={{
+                              backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                              backgroundPosition: 'right 0.5rem center',
+                              backgroundRepeat: 'no-repeat',
+                              backgroundSize: '1rem 1rem'
+                            }}
+                          >
+                            <option value="active">Active</option>
+                            <option value="unsubscribed">Unsubscribed</option>
+                          </select>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600 text-sm">
+                          {new Date(subscription.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="py-4 px-6 text-gray-600 text-sm">
+                          {subscription.updated_at ? new Date(subscription.updated_at).toLocaleDateString() : '-'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
       
       case 'job-board':
         return <JobManager />;
@@ -1618,6 +1808,16 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
             }
           />
           <TabButton
+            id="newsletter-subscriptions"
+            label="Newsletter Subscriptions"
+            path="/admin/newsletter-subscriptions"
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            }
+          />
+          <TabButton
             id="settings"
             label="Settings"
             path="/admin/settings"
@@ -1657,8 +1857,8 @@ const AdminDashboard = ({ activeTab: propActiveTab }) => {
                   {saved && <span className="text-green-600 text-sm">Saved!</span>}
                   <button
                     onClick={() => {
-                      // Get content from the current HomeEdit component
-                      const saveEvent = new CustomEvent('requestSave');
+                      // Trigger save from the SimplePageEdit component
+                      const saveEvent = new CustomEvent('triggerSave');
                       window.dispatchEvent(saveEvent);
                     }}
                     disabled={loading}

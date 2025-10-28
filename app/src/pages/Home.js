@@ -100,8 +100,12 @@ const AnimatedCounter = ({ targetValue, className = "" }) => {
 
 // Parallax USP Section Component
 const ParallaxUSPSection = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1); // Start with -1 to handle initial state
   const sectionRef = useRef(null);
+  const headerRef = useRef(null);
+  const contentRef = useRef(null);
+  const scrollingContentRef = useRef(null);
+  const descriptionRefs = useRef([]);
 
   const uspItems = [
     {
@@ -133,55 +137,83 @@ const ParallaxUSPSection = () => {
     },
   ];
 
+  // Observer for active USP
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = parseInt(entry.target.dataset.index, 10);
+            setActiveIndex(index);
+          }
+        });
+      },
+      { rootMargin: "-50% 0px -50% 0px", threshold: 0 }
+    );
+
+    const refs = descriptionRefs.current;
+    refs.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      refs.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, []);
+
+  // Scroll handler for animations
   useEffect(() => {
     const handleScroll = () => {
-      if (!sectionRef.current) return;
-      
+      if (!headerRef.current || !contentRef.current || !sectionRef.current || !scrollingContentRef.current) return;
+
       const rect = sectionRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
       
-      // If section hasn't entered viewport yet
-      if (rect.top > windowHeight) {
-        setActiveIndex(0);
-        return;
-      }
+      // Step 1: Section Entrance & Header Fade-in
+      const entryProgress = Math.max(0, Math.min(1, (windowHeight - rect.top) / (windowHeight * 0.5)));
+      headerRef.current.style.opacity = entryProgress;
+      headerRef.current.style.transform = `translateY(${(1 - entryProgress) * 50}px)`;
+
+      // Step 2 & 4: Header fade-out and content fade-in/out
+      const headerFadeStart = windowHeight * 0.3; // Start fading header later
+      const headerFadeEnd = windowHeight * 0.1; // Complete header fade
+      const contentFadeStart = windowHeight * 0.15; // Start content fade after header is mostly gone
       
-      // If section is completely scrolled past
-      if (rect.bottom < 0) {
-        setActiveIndex(2);
-        return;
-      }
+      // Header fade out
+      const headerProgress = Math.max(0, Math.min(1, (headerFadeStart - rect.top) / (headerFadeStart - headerFadeEnd)));
+      headerRef.current.style.opacity = 1 - headerProgress;
       
-      // Calculate how much of the section has been scrolled through
-      // When section just enters (top = windowHeight), scrolled = 0
-      // As we scroll, scrolled increases
-      const scrolled = Math.max(0, windowHeight - rect.top);
-      const sectionHeight = rect.height;
-      
-      // Calculate progress as a ratio (0 to 1)
-      const progress = scrolled / sectionHeight;
-      
-      // Determine active index based on progress
-      // Each section gets roughly equal scroll space
-      if (progress < 0.25) {
-        setActiveIndex(0);  // Quality over quantity
-      } else if (progress < 0.6) {
-        setActiveIndex(1);  // Consultative approach
-      } else {
-        setActiveIndex(2);  // Specialized experts
+      // Content fade in (delayed until header is mostly faded)
+      const contentProgress = Math.max(0, Math.min(1, (contentFadeStart - rect.top) / contentFadeStart));
+      const contentOpacity = contentProgress;
+      contentRef.current.style.opacity = contentOpacity;
+      scrollingContentRef.current.style.opacity = contentOpacity;
+
+      // Outro fade - only fade out if not at the last USP
+      const exitPoint = rect.height - windowHeight * 1.5;
+      if (rect.top < -exitPoint && activeIndex !== uspItems.length - 1) {
+        const exitProgress = Math.max(0, Math.min(1, (-rect.top - exitPoint) / (windowHeight * 0.5)));
+        const finalOpacity = Math.max(contentOpacity * (1 - exitProgress), contentOpacity);
+        contentRef.current.style.opacity = finalOpacity;
+        scrollingContentRef.current.style.opacity = finalOpacity;
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll();
+    handleScroll(); // Initial call
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <section className="bg-brand-blue py-32 relative" ref={sectionRef} style={{ minHeight: '400vh' }}>
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-40 opacity-0" data-animate>
+    <section ref={sectionRef} className="bg-brand-blue py-8 relative" style={{ minHeight: '300vh' }}>
+      {/* Sticky container for the animations */}
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-start pt-16">
+        
+        {/* Step 1: Header */}
+        <div ref={headerRef} className="text-center transition-all duration-200" style={{ opacity: 0 }}>
           <p className="text-gray-300 text-sm uppercase tracking-wide mb-4">Why choose us</p>
           <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-white">
             Our unique value proposition
@@ -191,39 +223,50 @@ const ParallaxUSPSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-12 md:gap-20 items-start max-w-7xl mx-auto">
-          {/* Left side - Title (Fixed/Sticky) */}
-          <div className="md:sticky md:top-1/3 self-start">
-            <div className="relative w-full min-h-[200px]">
-              {uspItems.map((item, index) => (
-                <div
-                  key={index}
-                  className={`transition-all duration-500 ${
-                    activeIndex === index
-                      ? 'opacity-100 translate-y-0'
-                      : 'opacity-0 translate-y-8 pointer-events-none absolute top-0 left-0 w-full'
-                  }`}
-                >
-                  <h3 className="text-4xl md:text-5xl font-light leading-tight text-white">
-                    {item.title}
-                  </h3>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Right side - Scrolling descriptions */}
-          <div className="space-y-[60vh]">
+        {/* Step 2-4: USP Content */}
+        <div ref={contentRef} className="grid md:grid-cols-2 gap-12 md:gap-20 items-center max-w-7xl mx-auto w-full px-6 absolute top-0 left-0 right-0 h-full transition-opacity duration-300" style={{ opacity: 0 }}>
+          {/* Left side - Title (Fixed) */}
+          <div className="relative h-48 flex items-center justify-center">
             {uspItems.map((item, index) => (
-              <div key={index} className="min-h-[60vh] flex items-start pt-0">
-                <div className="w-full">
-                  <p className="text-gray-300 text-lg leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
+              <div
+                key={index}
+                className={`transition-all duration-500 ease-in-out absolute top-0 left-0 w-full h-full flex items-center ${
+                  activeIndex === index
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 translate-y-8 pointer-events-none'
+                }`}
+              >
+                <h3 className="text-4xl md:text-5xl font-light leading-tight text-white">
+                  {item.title}
+                </h3>
               </div>
             ))}
           </div>
+          {/* Right side placeholder - this column is just for grid layout, the actual content is below */}
+          <div></div>
+        </div>
+      </div>
+
+      {/* Right side - Scrolling descriptions (non-sticky part) */}
+      <div ref={scrollingContentRef} style={{opacity: 0}} className="relative max-w-7xl mx-auto grid md:grid-cols-2 gap-12 md:gap-20 -mt-[100vh] pointer-events-none transition-opacity duration-300">
+        {/* Left side placeholder */}
+        <div></div>
+        {/* Actual scrolling content */}
+        <div className="space-y-[50vh] pt-[25vh] pb-[25vh] pointer-events-auto">
+          {uspItems.map((item, index) => (
+            <div
+              key={index}
+              ref={(el) => (descriptionRefs.current[index] = el)}
+              data-index={index}
+              className="min-h-[50vh] flex items-center justify-center"
+            >
+              <div className="w-full">
+                <p className="text-gray-300 text-lg leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -405,6 +448,11 @@ const Home = () => {
   const [saving, setSaving] = useState(false);
   const [savedNotification, setSavedNotification] = useState(false);
   const [featuredJobs, setFeaturedJobs] = useState([]);
+  
+  // Newsletter subscription state
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [newsletterMessage, setNewsletterMessage] = useState('');
 
   // Check if we're in edit mode from URL params and if admin is logged in
   useEffect(() => {
@@ -677,6 +725,52 @@ const Home = () => {
     setEditMode(false);
   };
 
+  // Newsletter subscription handler
+  const handleNewsletterSignup = async (e) => {
+    e.preventDefault();
+    
+    if (!newsletterEmail || !newsletterEmail.includes('@')) {
+      setNewsletterMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setNewsletterLoading(true);
+    setNewsletterMessage('');
+
+    try {
+      const { data, error } = await supabase
+        .from('newsletter_subscriptions')
+        .insert([
+          {
+            email: newsletterEmail.toLowerCase().trim(),
+            source: 'website'
+          }
+        ])
+        .select();
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          setNewsletterMessage('This email is already subscribed to our newsletter.');
+        } else {
+          throw error;
+        }
+      } else {
+        setNewsletterMessage('Thank you for subscribing! You\'ll receive our latest updates.');
+        setNewsletterEmail('');
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      setNewsletterMessage('Something went wrong. Please try again later.');
+    }
+
+    setNewsletterLoading(false);
+    
+    // Clear message after 5 seconds
+    setTimeout(() => {
+      setNewsletterMessage('');
+    }, 5000);
+  };
+
   const EditableText = ({ value, onChange, multiline = false, placeholder, className = "", rows = 1 }) => {
     if (!editMode) {
       return (
@@ -833,7 +927,10 @@ const Home = () => {
           {/* Expertise Cards - Lego Style */}
           <div className="grid md:grid-cols-4 gap-6 max-w-7xl mx-auto">
             {/* Card 1: Biostatistics - 2x width */}
-            <div className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+            <div 
+              className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)] cursor-pointer hover:bg-slate-700 hover:bg-opacity-60 transition-all duration-300"
+              onClick={() => navigate('/specialisms?focus=biostatistics')}
+            >
               <h3 className="text-white text-2xl font-light mb-4 leading-tight">
                 Biostatistics
               </h3>
@@ -851,7 +948,10 @@ const Home = () => {
             </div>
 
             {/* Card 2: Clinical Data Management - 1x width */}
-            <div className="bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+            <div 
+              className="bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)] cursor-pointer hover:bg-slate-700 hover:bg-opacity-60 transition-all duration-300"
+              onClick={() => navigate('/specialisms?focus=clinical')}
+            >
               <h3 className="text-white text-2xl font-light mb-4 leading-tight">
                 Clinical Data<br />Management
               </h3>
@@ -869,7 +969,10 @@ const Home = () => {
             </div>
 
             {/* Card 3: Statistical Programming - 1x width */}
-            <div className="bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+            <div 
+              className="bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)] cursor-pointer hover:bg-slate-700 hover:bg-opacity-60 transition-all duration-300"
+              onClick={() => navigate('/specialisms?focus=statistical-programming')}
+            >
               <h3 className="text-white text-2xl font-light mb-4 leading-tight">
                 Statistical<br />Programming
               </h3>
@@ -887,7 +990,10 @@ const Home = () => {
             </div>
 
             {/* Card 4: Data Science - 2x width (second row) */}
-            <div className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+            <div 
+              className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)] cursor-pointer hover:bg-slate-700 hover:bg-opacity-60 transition-all duration-300"
+              onClick={() => navigate('/specialisms?focus=data-science')}
+            >
               <h3 className="text-white text-2xl font-light mb-4 leading-tight">
                 Data Science
               </h3>
@@ -905,7 +1011,10 @@ const Home = () => {
             </div>
 
             {/* Card 5: Bioinformatics - 2x width (second row) */}
-            <div className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+            <div 
+              className="md:col-span-2 bg-slate-800 bg-opacity-60 rounded-lg p-8 backdrop-blur-sm relative shadow-[0_2px_4px_rgba(0,0,0,0.15)] cursor-pointer hover:bg-slate-700 hover:bg-opacity-60 transition-all duration-300"
+              onClick={() => navigate('/specialisms?focus=bioinformatics')}
+            >
               <h3 className="text-white text-2xl font-light mb-4 leading-tight">
                 Bioinformatics
               </h3>
@@ -1415,16 +1524,33 @@ const Home = () => {
               </p>
               
               {/* Email Signup */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-lg mx-auto mb-4">
+              <form onSubmit={handleNewsletterSignup} className="flex flex-col sm:flex-row gap-3 justify-center max-w-lg mx-auto mb-4">
                 <input
                   type="email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className="flex-1 px-5 py-3 rounded-full bg-transparent border border-white/30 text-white placeholder-gray-400 focus:outline-none focus:border-white/50 text-sm"
+                  disabled={newsletterLoading}
+                  className="flex-1 px-5 py-3 rounded-full bg-transparent border border-white/30 text-white placeholder-gray-400 focus:outline-none focus:border-white/50 text-sm disabled:opacity-50"
+                  required
                 />
-                <button className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-full transition-all duration-300 font-medium text-sm">
-                  Sign up
+                <button 
+                  type="submit"
+                  disabled={newsletterLoading}
+                  className="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white px-8 py-3 rounded-full transition-all duration-300 font-medium text-sm disabled:cursor-not-allowed"
+                >
+                  {newsletterLoading ? 'Signing up...' : 'Sign up'}
                 </button>
-              </div>
+              </form>
+              
+              {/* Newsletter Message */}
+              {newsletterMessage && (
+                <div className={`text-sm mb-4 ${
+                  newsletterMessage.includes('Thank you') ? 'text-green-400' : 'text-red-400'
+                }`}>
+                  {newsletterMessage}
+                </div>
+              )}
               
               <p className="text-gray-400 text-sm">
                 By clicking Sign Up you're confirming that you agree with our Terms and Conditions.
@@ -1436,7 +1562,15 @@ const Home = () => {
               {/* Logo */}
               <div className="lg:col-span-1">
                 <div className="mb-8">
-                  <span className="text-2xl font-light italic">JCR</span>
+                  <img 
+                    src="jcr_white_transparent.png" 
+                    alt="JCR Pharma" 
+                    className="h-12 w-auto object-cover"
+                    style={{
+                      clipPath: 'inset(20% 0 20% 0)',
+                      transform: 'scaleY(1.67)'
+                    }}
+                  />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">
                   Specialized recruitment for life sciences data and biometrics professionals across global markets.
@@ -1461,9 +1595,9 @@ const Home = () => {
                 <ul className="space-y-4">
                   <li><a href="/jobs" className="text-gray-300 hover:text-white transition-colors text-sm">Browse Jobs</a></li>
                   <li><a href="/candidates" className="text-gray-300 hover:text-white transition-colors text-sm">Upload CV</a></li>
-                  <li><a href="/jobs#biostatistics" className="text-gray-300 hover:text-white transition-colors text-sm">Biostatistics</a></li>
+                  <li><a href="/jobs#biometrics" className="text-gray-300 hover:text-white transition-colors text-sm">Biometrics</a></li>
                   <li><a href="/jobs#bioinformatics" className="text-gray-300 hover:text-white transition-colors text-sm">Bioinformatics</a></li>
-                  <li><a href="/jobs#clinical-data" className="text-gray-300 hover:text-white transition-colors text-sm">Clinical Data</a></li>
+                  <li><a href="/jobs#data-science" className="text-gray-300 hover:text-white transition-colors text-sm">Data Science</a></li>
                 </ul>
               </div>
 
@@ -1472,43 +1606,43 @@ const Home = () => {
                 <h4 className="text-white font-medium mb-6">Follow us</h4>
                                                  <ul className="space-y-4">
                   <li>
-                    <a href="https://facebook.com" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
+                    <a href="https://www.facebook.com/share/16cRTXXnJq/?mibextid=wwXIfr" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                       </svg>
                       Facebook
                     </a>
                   </li>
                   <li>
-                    <a href="https://instagram.com" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
+                    <a href="https://www.instagram.com/jcrpharmaltd/" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.219-.359-1.219c0-1.142.662-1.995 1.488-1.995.703 0 1.042.527 1.042 1.16 0 .706-.449 1.763-.681 2.739-.194.825.413 1.497 1.227 1.497 1.473 0 2.604-1.553 2.604-3.799 0-1.983-1.426-3.37-3.459-3.37-2.357 0-3.743 1.769-3.743 3.598 0 .712.274 1.476.617 1.890.068.082.077.154.057.238-.061.26-.196.837-.223.953-.035.146-.116.177-.268.107-1.001-.465-1.624-1.926-1.624-3.1 0-2.523 1.834-4.84 5.287-4.84 2.781 0 4.943 1.981 4.943 4.628 0 2.757-1.739 4.976-4.151 4.976-.811 0-1.573-.421-1.834-.922l-.498 1.902c-.181.695-.669 1.566-.995 2.097A12.013 12.013 0 0 0 12.017 24c6.624 0 11.99-5.367 11.99-11.013C24.007 5.367 18.641.001.017 0z"/>
+                        <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.690 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.888-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.357-.631-2.750-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24c6.624 0 11.99-5.367 11.99-11.013C24.007 5.367 18.641.001 12.017.001z"/>
                       </svg>
                       Instagram
                     </a>
                   </li>
                   <li>
-                    <a href="https://x.com" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
+                    <a href="https://x.com/JCRPharma" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                       </svg>
                       X
                     </a>
                   </li>
                   <li>
-                    <a href="https://linkedin.com" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                      </svg>
-                      LinkedIn
-                    </a>
-                  </li>
-                  <li>
-                    <a href="https://youtube.com" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
+                    <a href="https://www.youtube.com/@JCRPharma" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                       </svg>
                       Youtube
+                    </a>
+                  </li>
+                  <li>
+                    <a href="https://www.linkedin.com/company/jcr-pharma/" className="text-gray-300 hover:text-white transition-colors flex items-center gap-3 text-sm">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                      </svg>
+                      LinkedIn
                     </a>
                   </li>
                 </ul>
@@ -1522,7 +1656,7 @@ const Home = () => {
           <div className="container mx-auto px-6">
             <div className="flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto">
               <p className="text-gray-400 text-sm mb-4 md:mb-0">
-                © 2025 Relume. All rights reserved.
+                © 2025 JCR Pharma. All rights reserved.
               </p>
               <div className="flex gap-8">
                 <a href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">Privacy Policy</a>
