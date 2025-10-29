@@ -1,57 +1,310 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
-const Specialisms = () => {
+// Parallax Timeline Section Component
+const ParallaxTimelineSection = ({ timeline }) => {
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const sectionRef = useRef(null);
+  const headerRef = useRef(null);
+  const contentRef = useRef(null);
+  const scrollingContentRef = useRef(null);
+  const descriptionRefs = useRef([]);
+
+  // Observer for active timeline step
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const index = parseInt(entry.target.dataset.index, 10);
+            setActiveIndex(index);
+          }
+        });
+      },
+      { rootMargin: "-50% 0px -50% 0px", threshold: 0 }
+    );
+
+    const refs = descriptionRefs.current;
+    refs.forEach((ref) => {
+      if (ref) observer.observe(ref);
+    });
+
+    return () => {
+      refs.forEach((ref) => {
+        if (ref) observer.unobserve(ref);
+      });
+    };
+  }, []);
+
+  // Scroll handler for animations
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!headerRef.current || !contentRef.current || !sectionRef.current || !scrollingContentRef.current) return;
+
+      const rect = sectionRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      
+      // Step 1: Section Entrance & Header Fade-in
+      const entryProgress = Math.max(0, Math.min(1, (windowHeight - rect.top) / (windowHeight * 0.5)));
+      headerRef.current.style.opacity = entryProgress;
+      headerRef.current.style.transform = `translateY(${(1 - entryProgress) * 50}px)`;
+
+      // Step 2 & 4: Header fade-out and content fade-in/out
+      const headerFadeStart = windowHeight * 0.3;
+      const headerFadeEnd = windowHeight * 0.1;
+      const contentFadeStart = windowHeight * 0.15;
+      
+      // Header fade out
+      const headerProgress = Math.max(0, Math.min(1, (headerFadeStart - rect.top) / (headerFadeStart - headerFadeEnd)));
+      headerRef.current.style.opacity = 1 - headerProgress;
+      
+      // Content fade in
+      const contentProgress = Math.max(0, Math.min(1, (contentFadeStart - rect.top) / contentFadeStart));
+      const contentOpacity = contentProgress;
+      contentRef.current.style.opacity = contentOpacity;
+      scrollingContentRef.current.style.opacity = contentOpacity;
+
+      // Outro fade
+      const exitPoint = rect.height - windowHeight * 1.5;
+      if (rect.top < -exitPoint && activeIndex !== timeline.length - 1) {
+        const exitProgress = Math.max(0, Math.min(1, (-rect.top - exitPoint) / (windowHeight * 0.5)));
+        const finalOpacity = Math.max(contentOpacity * (1 - exitProgress), contentOpacity);
+        contentRef.current.style.opacity = finalOpacity;
+        scrollingContentRef.current.style.opacity = finalOpacity;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [activeIndex, timeline.length]);
+
+  return (
+    <section ref={sectionRef} className="bg-gray-50 py-8 relative" style={{ minHeight: '400vh' }}>
+      {/* Sticky container for the animations */}
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-start pt-16">
+        
+        {/* Header */}
+        <div ref={headerRef} className="text-center transition-all duration-200" style={{ opacity: 0 }}>
+          <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our Process</p>
+          <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
+            Recruitment process timeline
+          </h2>
+          <p className="text-gray-600 text-lg max-w-3xl mx-auto">
+            A structured 7-step methodology built on 10+ years of biometric and bioinformatic recruitment expertise
+          </p>
+        </div>
+
+        {/* Timeline Content */}
+        <div ref={contentRef} className="grid md:grid-cols-2 gap-12 md:gap-20 items-center max-w-7xl mx-auto w-full px-6 absolute top-0 left-0 right-0 h-full transition-opacity duration-300" style={{ opacity: 0 }}>
+          {/* Left side - Step Title (Fixed) */}
+          <div className="relative h-48 flex items-center justify-center">
+            
+             {timeline.map((item, index) => (
+               <div
+                 key={index}
+                 className={`transition-all duration-500 ease-in-out absolute inset-0 flex flex-col justify-center ${
+                   activeIndex === index
+                     ? 'opacity-100 translate-y-0'
+                     : 'opacity-0 translate-y-8 pointer-events-none'
+                 }`}
+               >
+                 <div className="relative z-10 flex flex-col items-center">
+                   {/* Circle with vertical line through it */}
+                   <div className="relative">
+                     {/* Vertical line extending above and below circle */}
+                     <div className="absolute left-1/2 top-0 w-1 bg-gray-300 transform -translate-x-1/2 z-0" style={{ height: '8rem' }}></div>
+                     {/* Circle positioned in the middle of the line */}
+                     <div className="w-16 h-16 bg-brand-blue rounded-full flex items-center justify-center shadow-lg border-4 border-white mb-12 relative z-10 mt-8">
+                       <span className="text-white font-bold text-lg">{item.step}</span>
+                     </div>
+                   </div>
+                   {/* Text content below the line - centered */}
+                   <div className="text-center">
+                     <h3 className="text-3xl md:text-4xl font-light leading-tight text-gray-900">
+                       {item.title}
+                     </h3>
+                     <span className="text-brand-blue text-sm font-semibold bg-brand-blue/10 px-4 py-2 rounded-full mt-4 inline-block">
+                       {item.duration}
+                     </span>
+                   </div>
+                 </div>
+               </div>
+             ))}
+          </div>
+          {/* Right side placeholder */}
+          <div></div>
+        </div>
+      </div>
+
+      {/* Right side - Scrolling descriptions */}
+      <div ref={scrollingContentRef} style={{opacity: 0}} className="relative max-w-7xl mx-auto grid md:grid-cols-2 gap-12 md:gap-20 -mt-[100vh] pointer-events-none transition-opacity duration-300">
+        {/* Left side placeholder */}
+        <div></div>
+        {/* Actual scrolling content */}
+        <div className="space-y-[50vh] pt-[25vh] pb-[25vh] pointer-events-auto">
+          {timeline.map((item, index) => (
+            <div
+              key={index}
+              ref={(el) => (descriptionRefs.current[index] = el)}
+              data-index={index}
+              className="min-h-[50vh] flex items-center justify-center"
+            >
+              <div className="w-full bg-white rounded-lg p-8 shadow-lg border border-gray-200">
+                <p className="text-gray-700 text-lg leading-relaxed mb-6">
+                  {item.description}
+                </p>
+                
+                {/* Key Activities */}
+                {item.details && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Key Activities:</h4>
+                    <ul className="text-sm text-gray-600 space-y-2">
+                      {item.details.map((detail, detailIndex) => (
+                        <li key={detailIndex} className="flex items-start">
+                          <div className="w-2 h-2 bg-brand-blue rounded-full mr-3 mt-2 flex-shrink-0"></div>
+                          <span>{detail}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const Specializations = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [activeSpecialism, setActiveSpecialism] = useState('biostatistics');
   const [openFaq, setOpenFaq] = useState(null);
 
-  const specialisms = {
+  // Form state
+  const [formData, setFormData] = useState({
+    personName: '',
+    title: '',
+    businessName: '',
+    email: '',
+    phone: '',
+    location: '',
+    roleOverview: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState('');
+
+  const specializations = {
     biostatistics: {
-      title: 'Biostatistics Recruitment',
-      description: 'Connect with top statistical programming talent for clinical research and regulatory submissions.',
+      title: 'Biostatistics',
+      fullTitle: 'Biostatistics Recruitment',
+      description: 'Advanced statistical analysis and methodology for clinical trials and research studies.',
+      longDescription: 'Connect with top statistical programming talent for clinical research and regulatory submissions.',
       features: ['Statistical Programming', 'Clinical Data Analysis', 'Regulatory Compliance', 'SAS/R Programming'],
       roles: ['Senior Biostatistician', 'Statistical Programmer', 'Principal Biostatistician', 'Statistics Director']
     },
     clinical: {
       title: 'Clinical Data Management',
-      description: 'Find experts in clinical data handling, database design, and regulatory compliance.',
+      fullTitle: 'Clinical Data Management',
+      description: 'Comprehensive data handling and regulatory compliance.',
+      longDescription: 'Find experts in clinical data handling, database design, and regulatory compliance.',
       features: ['Database Design', 'Data Quality', 'EDC Systems', 'Regulatory Standards'],
       roles: ['CDM Manager', 'Data Manager', 'CDM Director', 'Database Developer']
     },
     'statistical-programming': {
       title: 'Statistical Programming',
-      description: 'Specialised SAS, R, and Python programming talent for clinical research and regulatory submissions.',
+      fullTitle: 'Statistical Programming',
+      description: 'SAS, R, and Python programming for clinical research.',
+      longDescription: 'Specialised SAS, R, and Python programming talent for clinical research and regulatory submissions.',
       features: ['SAS Programming', 'R Programming', 'Python Programming', 'CDISC Standards'],
       roles: ['Senior Statistical Programmer', 'Principal Statistical Programmer', 'Statistical Programming Manager', 'Lead SAS Programmer']
     },
     'data-science': {
       title: 'Data Science',
+      fullTitle: 'Data Science',
       description: 'Machine learning and AI-driven insights for pharmaceutical innovation and biomarker discovery.',
+      longDescription: 'Machine learning and AI-driven insights for pharmaceutical innovation and biomarker discovery.',
       features: ['Machine Learning', 'AI Development', 'Biomarker Discovery', 'Predictive Analytics'],
       roles: ['Senior Data Scientist', 'Principal Data Scientist', 'Data Science Manager', 'AI/ML Engineer']
     },
     bioinformatics: {
       title: 'Bioinformatics',
-      description: 'Recruit computational biologists and bioinformatics specialists for cutting-edge research.',
+      fullTitle: 'Bioinformatics',
+      description: 'Computational biology and genomics expertise for precision medicine and biomarker development.',
+      longDescription: 'Recruit computational biologists and bioinformatics specialists for cutting-edge research.',
       features: ['Genomic Analysis', 'NGS Data Processing', 'Pipeline Development', 'Machine Learning'],
       roles: ['Bioinformatics Scientist', 'Computational Biologist', 'NGS Analyst', 'Bioinformatics Director']
-    },
-    medical: {
-      title: 'Medical Affairs',
-      description: 'Source medical science liaisons and clinical development professionals.',
-      features: ['Medical Communications', 'Clinical Strategy', 'Regulatory Affairs', 'Publication Planning'],
-      roles: ['Medical Science Liaison', 'Medical Director', 'Clinical Research Associate', 'Medical Writer']
     }
   };
 
-  // Handle URL parameters to set the active specialism
+  // Handle URL parameters to set the active specialization
   useEffect(() => {
     const focusParam = searchParams.get('focus');
-    if (focusParam && specialisms[focusParam]) {
+    if (focusParam && specializations[focusParam]) {
       setActiveSpecialism(focusParam);
     }
-  }, [searchParams, specialisms]);
+  }, [searchParams, specializations]);
+
+  // Form handlers
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitMessage('');
+
+    try {
+      // Submit form data to database
+      const { data, error } = await supabase
+        .from('hiring_requests')
+        .insert({
+          person_name: formData.personName,
+          title: formData.title,
+          business_name: formData.businessName,
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          role_overview: formData.roleOverview,
+          status: 'pending'
+        })
+        .select();
+
+      if (error) {
+        throw error;
+      }
+
+      console.log('Hiring request submitted successfully:', data);
+      setSubmitMessage('Hiring request submitted successfully! We\'ll contact you soon to discuss your requirements.');
+      
+      // Reset form
+      setFormData({
+        personName: '',
+        title: '',
+        businessName: '',
+        email: '',
+        phone: '',
+        location: '',
+        roleOverview: ''
+      });
+
+    } catch (error) {
+      console.error('Error submitting hiring request:', error);
+      setSubmitMessage(`Error submitting request: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const timeline = [
     {
@@ -140,8 +393,8 @@ const Specialisms = () => {
 
   const faqs = [
     {
-      question: 'What specialisms do you cover in life sciences recruitment?',
-      answer: 'We specialise in biostatistics, clinical data management, bioinformatics, medical affairs, regulatory affairs, and clinical research. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies.'
+      question: 'What specializations do you cover in life sciences recruitment?',
+      answer: 'We specialize in biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies.'
     },
     {
       question: 'How long does the typical recruitment process take?',
@@ -170,51 +423,114 @@ const Specialisms = () => {
       {/* Hero Section */}
       <section className="bg-brand-blue">
         <div className="container mx-auto px-6 py-20">
-          <div className="text-center text-white mb-16">
-            <h1 className="text-5xl md:text-6xl font-light mb-8 leading-tight">
-              {specialisms[activeSpecialism].title}
+          <div className="text-center text-white">
+            <h1 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
+              Life Sciences Specializations
             </h1>
-            <p className="text-gray-300 text-lg md:text-xl mb-12 max-w-4xl mx-auto leading-relaxed">
-              {specialisms[activeSpecialism].description}
+            <p className="text-gray-300 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
+              Discover our specialized recruitment expertise across key areas of life sciences, biotechnology, and pharmaceutical research.
             </p>
-            
-            {/* CTA Button */}
-            <div className="mb-20">
-              <button className="bg-white/10 hover:bg-white/20 text-white hover:text-white px-8 py-3 rounded-full transition-all duration-300 backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.2)] hover:backdrop-blur-lg font-medium">
-                Start Recruitment Process
-              </button>
-            </div>
           </div>
-          
-          {/* Specialism Selector */}
-          <div className="max-w-5xl mx-auto mb-16">
-            <div className="grid md:grid-cols-2 gap-6">
-              {Object.entries(specialisms).map(([key, specialism]) => (
+        </div>
+      </section>
+
+      {/* Specializations Section - Full Width */}
+      <section className="bg-white">
+        <div className="w-full">
+          <div className="bg-white shadow-xl">
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-200">
+              <div className="container mx-auto px-6">
+                <div className="flex overflow-x-auto">
+                {Object.entries(specializations).map(([key, specialization]) => (
                 <button
                   key={key}
                   onClick={() => setActiveSpecialism(key)}
-                  className={`p-6 rounded-lg transition-all duration-300 text-left ${
+                    className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-all duration-300 border-b-2 ${
                     activeSpecialism === key 
-                      ? 'bg-white/20 text-white border-2 border-white/30' 
-                      : 'bg-white/10 text-gray-300 hover:bg-white/15 border-2 border-transparent'
-                  }`}
-                >
-                  {/* Image Placeholder */}
-                  <div className="mb-6">
-                    <div className="h-32 bg-white/10 rounded-lg flex items-center justify-center">
-                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                        </svg>
+                        ? 'text-brand-blue border-brand-blue bg-gray-50' 
+                        : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
+                    }`}
+                  >
+                    {specialization.title}
+                  </button>
+                ))}
+                </div>
+              </div>
+            </div>
+            
+            {/* Tab Content - Full Width */}
+            <div className="w-full">
+              <div className="grid lg:grid-cols-2 gap-0">
+                {/* Left side - Main Content */}
+                <div className="p-8 lg:p-12">
+                <h2 className="text-3xl lg:text-4xl font-light text-gray-900 mb-6 leading-tight">
+                  Experts in {specializations[activeSpecialism].title.toLowerCase()} recruitment
+                </h2>
+                
+                <div className="space-y-6 text-gray-700 leading-relaxed">
+                  <p className="text-lg">
+                    At JCR Pharma, we work with some of the most innovative and dynamic companies in the life sciences sector, helping them find the best {specializations[activeSpecialism].title.toLowerCase()} talent for their projects and goals. We also build long-term relationships with candidates, understanding their skills, motivations and aspirations, and matching them with the right opportunities.
+                  </p>
+                  
+                  <p>
+                    As experienced recruiters, we have a deep knowledge of the {specializations[activeSpecialism].title.toLowerCase()} sector, as well as excellent communication, negotiation and problem-solving skills. We adapt our solutions in line with market changes and don't just recruit, we create solutions – our specialist teams will work with you to develop a recruitment strategy depending on your needs, as opposed to a 'one-size-fits-all' approach.
+                  </p>
+                </div>
+                
+                <div className="mt-8">
+                  <h3 className="text-2xl font-light text-gray-900 mb-4">
+                    Our approach
+                  </h3>
+                  <p className="text-gray-700 leading-relaxed">
+                    {specializations[activeSpecialism].longDescription}
+                  </p>
+                </div>
                       </div>
+                
+                {/* Right side - What we offer */}
+                <div className="bg-gray-50 p-8 lg:p-12">
+                <h3 className="text-2xl font-light text-gray-900 mb-6">
+                  What we offer
+                </h3>
+                
+                <p className="text-gray-700 mb-8 leading-relaxed">
+                  We specialize in recruiting for a range of areas within {specializations[activeSpecialism].title.toLowerCase()}, such as:
+                </p>
+                
+                {/* Key Areas List */}
+                <div className="space-y-4">
+                  {specializations[activeSpecialism].features.map((feature, index) => (
+                    <div key={index} className="flex items-start">
+                      <div className="w-2 h-2 bg-brand-blue rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <span className="text-gray-700">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Key Roles */}
+                <div className="mt-8">
+                  <h4 className="text-lg font-medium text-gray-900 mb-4">Key roles we recruit for:</h4>
+                  <div className="space-y-3">
+                    {specializations[activeSpecialism].roles.slice(0, 4).map((role, index) => (
+                      <div key={index} className="flex items-start">
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                        <span className="text-gray-600 text-sm">{role}</span>
+                      </div>
+                    ))}
                     </div>
                   </div>
                   
-                  <h3 className="text-xl font-semibold mb-3">{specialism.title}</h3>
-                  <p className="text-sm opacity-75 mb-4">{specialism.features[0]}</p>
-                  <p className="text-xs opacity-60">{specialism.description}</p>
+                <div className="mt-8">
+                  <button 
+                    onClick={() => navigate('/hire-talent')}
+                    className="bg-brand-blue hover:bg-brand-blue/90 text-white px-6 py-3 rounded-lg transition-all duration-300 font-medium"
+                  >
+                    Get in touch
                 </button>
-              ))}
+                </div>
+              </div>
+              </div>
             </div>
           </div>
         </div>
@@ -229,22 +545,22 @@ const Specialisms = () => {
               Our recruitment expertise
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Delivering specialised talent solutions with unmatched speed, quality, compliance, and global reach
+              Delivering specialised talent solutions with unmatched reliability, quality, consultative approach, and expert knowledge
             </p>
           </div>
 
           {/* USPs Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto mb-16">
-            {/* Speed */}
+            {/* Reliability */}
             <div className="text-center">
               <div className="w-16 h-16 bg-brand-blue/10 rounded-lg flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-gray-900">Speed</h3>
+              <h3 className="text-xl font-medium mb-4 text-gray-900">Reliability</h3>
               <p className="text-gray-600 leading-relaxed">
-                Average 14-day time-to-hire with our specialised network and streamlined processes
+                Consistent delivery of exceptional candidates with proven track records and long-term success
               </p>
             </div>
 
@@ -257,178 +573,43 @@ const Specialisms = () => {
               </div>
               <h3 className="text-xl font-medium mb-4 text-gray-900">Quality</h3>
               <p className="text-gray-600 leading-relaxed">
-                92% interview-to-offer success rate through rigorous technical screening and assessment
+                For every role, we provide 5 perfectly matched CV candidates through rigorous screening and assessment
               </p>
             </div>
 
-            {/* Compliance */}
+            {/* Consultative */}
             <div className="text-center">
               <div className="w-16 h-16 bg-brand-blue/10 rounded-lg flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-gray-900">Compliance</h3>
+              <h3 className="text-xl font-medium mb-4 text-gray-900">Consultative</h3>
               <p className="text-gray-600 leading-relaxed">
-                Full adherence to GxP standards and regulatory requirements across all markets
+                Strategic partnership approach, providing market insights and tailored recruitment solutions for your specific needs
               </p>
             </div>
 
-            {/* Global Reach */}
+            {/* Experts */}
             <div className="text-center">
               <div className="w-16 h-16 bg-brand-blue/10 rounded-lg flex items-center justify-center mx-auto mb-6">
                 <svg className="w-8 h-8 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-gray-900">Global Reach</h3>
+              <h3 className="text-xl font-medium mb-4 text-gray-900">Experts</h3>
               <p className="text-gray-600 leading-relaxed">
-                Active across UK, EU, and US markets with 150+ successful placements worldwide
+                Deep specialization in life sciences with 10+ years of sector expertise and extensive industry knowledge
               </p>
             </div>
           </div>
 
-          {/* Roles Grid */}
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-2xl font-light mb-8 text-center text-gray-900">
-              Key roles in {specialisms[activeSpecialism].title.toLowerCase()}
-            </h3>
-            <div className="grid md:grid-cols-2 gap-6">
-              {specialisms[activeSpecialism].roles.map((role, index) => (
-                <div key={index} className="bg-gray-50 rounded-lg p-6 hover:bg-gray-100 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-lg font-medium text-gray-900">{role}</h4>
-                    <button className="text-brand-blue hover:text-brand-blue/80 transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* Timeline Section */}
-      <section className="bg-gray-50 py-20">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our Process</p>
-            <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Recruitment process timeline
-            </h2>
-            <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              A structured 7-step methodology built on 10+ years of biometric and bioinformatic recruitment expertise
-            </p>
-          </div>
+      {/* Timeline Section - Parallax */}
+      <ParallaxTimelineSection timeline={timeline} />
 
-          <div className="max-w-4xl mx-auto">
-            <div className="relative">
-              {/* Timeline Line */}
-              <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gray-300"></div>
-              
-              {timeline.map((item, index) => (
-                <div key={index} className={`relative flex items-center mb-12 ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
-                  {/* Step Number */}
-                  <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-brand-blue rounded-full items-center justify-center z-10 shadow-lg">
-                    <span className="text-white font-bold text-sm">{item.step}</span>
-                  </div>
-                  
-                  {/* Content */}
-                  <div className={`w-full md:w-5/12 ${index % 2 === 0 ? 'md:pr-16' : 'md:pl-16'}`}>
-                    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-                      <div className="flex items-center mb-4 md:hidden">
-                        <div className="w-8 h-8 bg-brand-blue rounded-full flex items-center justify-center mr-4 shadow-md">
-                          <span className="text-white text-sm font-bold">{item.step}</span>
-                        </div>
-                        <span className="text-gray-500 text-sm font-medium">{item.duration}</span>
-                      </div>
-                      
-                      <h3 className="text-xl font-semibold mb-3 text-gray-900">{item.title}</h3>
-                      <p className="text-gray-600 mb-4 leading-relaxed">{item.description}</p>
-                      
-                      {/* Key Activities */}
-                      {item.details && (
-                        <div className="mb-4">
-                          <h4 className="text-sm font-medium text-gray-700 mb-2">Key Activities:</h4>
-                          <ul className="text-sm text-gray-600 space-y-1">
-                            {item.details.map((detail, detailIndex) => (
-                              <li key={detailIndex} className="flex items-center">
-                                <div className="w-1.5 h-1.5 bg-brand-blue rounded-full mr-2 flex-shrink-0"></div>
-                                {detail}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      <span className="hidden md:inline-block text-brand-blue text-sm font-semibold bg-brand-blue/10 px-3 py-1 rounded-full">{item.duration}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Case Studies Section */}
-      <section className="bg-white py-20">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Success Stories</p>
-            <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Case studies by specialism
-            </h2>
-            <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Real examples of how we've delivered exceptional recruitment results across different specialisms
-            </p>
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {caseStudies.map((study) => (
-              <div key={study.id} className="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow">
-                {/* Case Study Image Placeholder */}
-                <div className="h-48 bg-gray-300 flex items-center justify-center">
-                  <div className="w-16 h-16 bg-gray-400 rounded-lg flex items-center justify-center">
-                    <svg className="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                    </svg>
-                  </div>
-                </div>
-                
-                {/* Case Study Content */}
-                <div className="p-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">{study.category}</span>
-                  </div>
-                  
-                  <h3 className="text-xl font-medium mb-3 text-gray-900 leading-tight">
-                    {study.title}
-                  </h3>
-                  
-                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                    <span className="font-medium">Challenge:</span> {study.challenge}
-                  </p>
-                  
-                  <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                    <span className="font-medium">Result:</span> {study.result}
-                  </p>
-                  
-                  <button className="text-brand-blue hover:text-brand-blue/80 transition-colors flex items-center gap-1 text-sm font-medium">
-                    Read full case study
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* FAQ Section */}
       <section className="bg-gray-50 py-20">
@@ -485,21 +666,40 @@ const Specialisms = () => {
               Get in touch with our specialised recruitment team to discuss your hiring needs and learn how we can help you find the perfect candidates.
             </p>
             
+            {/* Submit Message */}
+            {submitMessage && (
+              <div className={`p-4 rounded-lg text-center mb-8 max-w-2xl mx-auto ${
+                submitMessage.includes('Error') 
+                  ? 'bg-red-100 text-red-800 border border-red-300' 
+                  : 'bg-green-100 text-green-800 border border-green-300'
+              }`}>
+                {submitMessage}
+              </div>
+            )}
+            
             {/* Contact Form */}
             <div className="bg-white/10 backdrop-blur-md rounded-lg p-8 max-w-2xl mx-auto">
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
                     <input
                       type="text"
-                      placeholder="First Name"
+                      name="personName"
+                      value={formData.personName}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Full Name"
                       className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all"
                     />
                   </div>
                   <div>
                     <input
                       type="text"
-                      placeholder="Last Name"
+                      name="title"
+                      value={formData.title}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Job Title"
                       className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all"
                     />
                   </div>
@@ -509,6 +709,10 @@ const Specialisms = () => {
                   <div>
                     <input
                       type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
                       placeholder="Email Address"
                       className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all"
                     />
@@ -516,25 +720,47 @@ const Specialisms = () => {
                   <div>
                     <input
                       type="text"
+                      name="businessName"
+                      value={formData.businessName}
+                      onChange={handleInputChange}
+                      required
                       placeholder="Company"
                       className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all"
                     />
                   </div>
                 </div>
                 
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Phone Number"
+                      className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all"
+                    />
+                  </div>
                 <div>
-                  <select className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all">
-                    <option value="">Select Specialism</option>
-                    <option value="biostatistics">Biostatistics</option>
-                    <option value="clinical">Clinical Data Management</option>
-                    <option value="bioinformatics">Bioinformatics</option>
-                    <option value="medical">Medical Affairs</option>
-                    <option value="other">Other</option>
-                  </select>
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      required
+                      placeholder="Company Location"
+                      className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all"
+                    />
+                  </div>
                 </div>
                 
                 <div>
                   <textarea
+                    name="roleOverview"
+                    value={formData.roleOverview}
+                    onChange={handleInputChange}
+                    required
                     rows="4"
                     placeholder="Tell us about your recruitment needs..."
                     className="w-full px-4 py-3 rounded-lg bg-white/20 border border-white/30 text-white placeholder-gray-300 focus:outline-none focus:border-white/50 focus:bg-white/30 transition-all resize-none"
@@ -543,9 +769,10 @@ const Specialisms = () => {
                 
                 <button
                   type="submit"
-                  className="w-full bg-white hover:bg-gray-100 text-brand-blue px-8 py-3 rounded-lg transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
+                  disabled={isSubmitting}
+                  className="w-full bg-white hover:bg-gray-100 text-brand-blue px-8 py-3 rounded-lg transition-all duration-300 font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Get Started
+                  {isSubmitting ? 'Submitting...' : 'Get Started'}
                 </button>
               </form>
             </div>
@@ -603,15 +830,15 @@ const Specialisms = () => {
                 </p>
               </div>
 
-              {/* Specialisms */}
+              {/* Specializations */}
               <div>
-                <h4 className="text-white font-medium mb-6">Specialisms</h4>
+                <h4 className="text-white font-medium mb-6">Specializations</h4>
                 <ul className="space-y-4">
                   <li><a href="/specialisms/biostatistics" className="text-gray-300 hover:text-white transition-colors text-sm">Biostatistics</a></li>
                   <li><a href="/specialisms/clinical" className="text-gray-300 hover:text-white transition-colors text-sm">Clinical Data Management</a></li>
+                  <li><a href="/specialisms/statistical-programming" className="text-gray-300 hover:text-white transition-colors text-sm">Statistical Programming</a></li>
+                  <li><a href="/specialisms/data-science" className="text-gray-300 hover:text-white transition-colors text-sm">Data Science</a></li>
                   <li><a href="/specialisms/bioinformatics" className="text-gray-300 hover:text-white transition-colors text-sm">Bioinformatics</a></li>
-                  <li><a href="/specialisms/medical" className="text-gray-300 hover:text-white transition-colors text-sm">Medical Affairs</a></li>
-                  <li><a href="/specialisms/regulatory" className="text-gray-300 hover:text-white transition-colors text-sm">Regulatory Affairs</a></li>
                 </ul>
               </div>
 
@@ -662,4 +889,4 @@ const Specialisms = () => {
   );
 };
 
-export default Specialisms; 
+export default Specializations; 
