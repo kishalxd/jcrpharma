@@ -1565,7 +1565,7 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button 
                 onClick={() => navigate('/hire-talent')}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-full transition-all duration-300 shadow-[0_2px_4px_rgba(0,0,0,0.15)] font-medium"
+                className="bg-brand-blue hover:bg-blue-700 text-white px-8 py-3 rounded-full transition-all duration-300 shadow-[0_2px_4px_rgba(0,0,0,0.15)] font-medium"
               >
                 Post a Job
               </button>
