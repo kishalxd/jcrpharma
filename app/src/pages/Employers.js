@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 // Add custom CSS for animations
 const customStyles = `
@@ -92,9 +93,118 @@ const AnimatedCounter = ({ end, duration = 2000, suffix = '', className = '' }) 
   );
 };
 
+const TestimonialsCarousel = ({ testimonials = [] }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Safety check for empty testimonials
+  if (!testimonials || testimonials.length === 0) {
+    return (
+      <div className="max-w-6xl mx-auto text-center">
+        <div className="text-white/60 text-lg">
+          <p>No testimonials available at the moment.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const nextTestimonial = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
+  };
+
+  const prevTestimonial = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + testimonials.length) % testimonials.length);
+  };
+
+  const goToTestimonial = (index) => {
+    setCurrentIndex(index);
+  };
+
+  const currentTestimonial = testimonials[currentIndex] || testimonials[0];
+
+  return (
+    <div className="max-w-6xl mx-auto relative">
+      {/* Testimonial Card */}
+      <div className="text-center">
+        {/* Testimonial Text with Navigation */}
+        <div className="relative">
+          {/* Left Arrow - Positioned relative to testimonial text */}
+          <button 
+            onClick={prevTestimonial}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-16 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white/30 transition-shadow"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Right Arrow - Positioned relative to testimonial text */}
+          <button 
+            onClick={nextTestimonial}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-16 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white/30 transition-shadow"
+          >
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          <blockquote className="text-2xl md:text-3xl font-light text-white mb-12 max-w-4xl mx-auto leading-relaxed">
+            "
+            {currentTestimonial.quote}
+            "
+          </blockquote>
+        </div>
+
+        {/* Author Info */}
+        <div className="flex flex-col items-center">
+          {/* Avatar */}
+          <div className="w-16 h-16 bg-brand-blue/20 rounded-full mb-4 flex items-center justify-center overflow-hidden">
+            {currentTestimonial.image_url ? (
+              <img 
+                src={currentTestimonial.image_url} 
+                alt={currentTestimonial.author}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-brand-blue font-semibold text-lg">
+                {currentTestimonial.avatar}
+              </span>
+            )}
+          </div>
+
+          {/* Name and Position */}
+          <h4 className="text-lg font-medium text-white mb-1">
+            {currentTestimonial.author}
+          </h4>
+          {(currentTestimonial.position || currentTestimonial.company) && (
+            <p className="text-gray-300">
+              {currentTestimonial.position}
+              {currentTestimonial.position && currentTestimonial.company && ', '}
+              {currentTestimonial.company}
+            </p>
+          )}
+        </div>
+
+        {/* Pagination Dots */}
+        <div className="flex justify-center space-x-2 mt-12">
+          {testimonials && testimonials.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToTestimonial(index)}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                index === currentIndex ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Employers = () => {
   const navigate = useNavigate();
   const [activeQuestion, setActiveQuestion] = useState(null);
+  const [testimonials, setTestimonials] = useState([]);
 
   // Animation refs
   const [heroRef, heroVisible] = useScrollAnimation(0.2);
@@ -160,6 +270,39 @@ const Employers = () => {
       answer: "Yes, we provide both contract and permanent placement solutions, tailored to your specific project needs and organizational requirements."
     }
   ];
+
+  const fetchTestimonials = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('status', 'active')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+
+      // Transform database testimonials to match the expected format
+      const transformedTestimonials = data.map(testimonial => ({
+        id: testimonial.id,
+        quote: testimonial.text,
+        author: testimonial.name,
+        position: '', // We don't have position in the database
+        company: '', // We don't have company in the database
+        avatar: testimonial.name.split(' ').map(n => n[0]).join('').toUpperCase(), // Generate initials
+        image_url: testimonial.image_url // Add image URL for display
+      }));
+
+      setTestimonials(transformedTestimonials);
+    } catch (error) {
+      console.error('Error fetching testimonials:', error);
+      // Fall back to empty array if database fetch fails
+      setTestimonials([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchTestimonials();
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -402,7 +545,7 @@ const Employers = () => {
                     4
                   </div>
                   {/* Vertical line down */}
-                  <div className={`absolute left-1/2 top-12 w-0.5 h-64 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
+                  <div className={`absolute left-1/2 top-12 w-0.5 h-52 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
                     timelineSteps.step4 ? 'scale-y-100' : 'scale-y-0'
                   }`} style={{ transformOrigin: 'top' }}></div>
                 </div>
@@ -523,7 +666,7 @@ const Employers = () => {
                     ? 'opacity-100 translate-y-0' 
                     : 'opacity-0 translate-y-8'
                 }`}
-                style={{ left: '43.5%', top: '240px', width: '13%' }}
+                style={{ left: '43.5%', top: '200px', width: '13%' }}
               >
                 <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
                   <h3 className="text-sm font-bold text-gray-900 mb-2">Candidate Shortlisting</h3>
@@ -598,7 +741,7 @@ const Employers = () => {
             </div>
 
             {/* Spacer to ensure content doesn't overlap */}
-            <div style={{ height: '350px' }}></div>
+            <div style={{ height: '320px' }}></div>
           </div>
         </div>
       </section>
@@ -656,34 +799,22 @@ const Employers = () => {
       </section>
 
       {/* Testimonial Section */}
-      <section className="py-20" style={{backgroundColor: '#d7e5fd'}}>
+      <section className="bg-brand-blue py-20">
         <div className="container mx-auto px-6">
           <div 
             ref={testimonialRef}
-            className={`max-w-4xl mx-auto text-center transition-all duration-1000 ${
+            className={`transition-all duration-1000 ${
               testimonialVisible 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-8'
             }`}
           >
-            <div className="mb-8">
-              <div className="flex items-center justify-center space-x-2 text-gray-800 mb-8">
-                <div className="w-8 h-8 bg-brand-blue transform rotate-45"></div>
-                <span className="text-2xl font-semibold">PharmaCorp</span>
-              </div>
+            <div className="text-center mb-16">
+              <h2 className="text-2xl md:text-3xl font-light text-white mb-8 leading-tight">
+                What our clients say
+              </h2>
             </div>
-
-            <blockquote className="text-2xl md:text-3xl font-light text-gray-900 mb-12 leading-relaxed">
-              "The quality of candidates and speed of delivery exceeded our expectations. We filled critical biostatistics roles in half the time of traditional recruiters."
-            </blockquote>
-
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-brand-blue/20 rounded-full mb-4 flex items-center justify-center">
-                <div className="w-12 h-12 bg-brand-blue/40 rounded-full"></div>
-              </div>
-              <h4 className="text-lg font-medium text-gray-900 mb-1">Sarah Johnson</h4>
-              <p className="text-gray-600">VP of Clinical Operations, PharmaCorp</p>
-            </div>
+            <TestimonialsCarousel testimonials={testimonials} />
           </div>
         </div>
       </section>

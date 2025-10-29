@@ -278,7 +278,28 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
 
   // Safety check for empty testimonials
   if (!testimonials || testimonials.length === 0) {
-    return null;
+    return (
+      <div className="max-w-6xl mx-auto text-center">
+        <div className="text-white/60 text-lg">
+          {editMode ? (
+            <div>
+              <p className="mb-4">No testimonials found. Add your first testimonial to get started.</p>
+              <button
+                onClick={addTestimonial}
+                className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors mx-auto"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add First Testimonial</span>
+              </button>
+            </div>
+          ) : (
+            <p>No testimonials available at the moment.</p>
+          )}
+        </div>
+      </div>
+    );
   }
 
   const nextTestimonial = () => {
@@ -371,13 +392,17 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
 
           <blockquote className="text-xl md:text-2xl font-light text-white mb-12 max-w-4xl mx-auto leading-relaxed">
             "
-            <EditableTestimonialText
-              value={currentTestimonial.quote}
-              onChange={(value) => updateTestimonial(currentTestimonial.id, 'quote', value)}
-              multiline={true}
-              placeholder="Enter testimonial quote..."
-              className="text-xl md:text-2xl font-light text-white leading-relaxed inline-block w-full"
-            />
+            {editMode ? (
+              <EditableTestimonialText
+                value={currentTestimonial.quote}
+                onChange={(value) => updateTestimonial(currentTestimonial.id, 'quote', value)}
+                multiline={true}
+                placeholder="Enter testimonial quote..."
+                className="text-xl md:text-2xl font-light text-white leading-relaxed inline-block w-full"
+              />
+            ) : (
+              currentTestimonial.quote
+            )}
             "
           </blockquote>
         </div>
@@ -385,15 +410,23 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
         {/* Author Info */}
         <div className="flex flex-col items-center">
           {/* Avatar */}
-          <div className="w-16 h-16 bg-white rounded-full mb-4 flex items-center justify-center">
-            <span className="text-brand-blue font-semibold text-lg">
-              <EditableTestimonialText
-                value={currentTestimonial.avatar}
-                onChange={(value) => updateTestimonial(currentTestimonial.id, 'avatar', value)}
-                placeholder="Avatar..."
-                className="text-brand-blue font-semibold text-lg text-center"
+          <div className="w-16 h-16 bg-white rounded-full mb-4 flex items-center justify-center overflow-hidden">
+            {currentTestimonial.image_url ? (
+              <img 
+                src={currentTestimonial.image_url} 
+                alt={currentTestimonial.author}
+                className="w-full h-full object-cover"
               />
-            </span>
+            ) : (
+              <span className="text-brand-blue font-semibold text-lg">
+                <EditableTestimonialText
+                  value={currentTestimonial.avatar}
+                  onChange={(value) => updateTestimonial(currentTestimonial.id, 'avatar', value)}
+                  placeholder="Avatar..."
+                  className="text-brand-blue font-semibold text-lg text-center"
+                />
+              </span>
+            )}
           </div>
 
           {/* Name and Position */}
@@ -405,21 +438,27 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
               className="text-lg font-medium text-white text-center block w-full"
             />
           </h4>
-          <p className="text-gray-300">
-            <EditableTestimonialText
-              value={currentTestimonial.position}
-              onChange={(value) => updateTestimonial(currentTestimonial.id, 'position', value)}
-              placeholder="Position..."
-              className="text-gray-300 text-center inline-block"
-            />
-            , 
-            <EditableTestimonialText
-              value={currentTestimonial.company}
-              onChange={(value) => updateTestimonial(currentTestimonial.id, 'company', value)}
-              placeholder="Company..."
-              className="text-gray-300 text-center inline-block ml-1"
-            />
-          </p>
+          {(currentTestimonial.position || currentTestimonial.company || editMode) && (
+            <p className="text-gray-300">
+              {(currentTestimonial.position || editMode) && (
+                <EditableTestimonialText
+                  value={currentTestimonial.position}
+                  onChange={(value) => updateTestimonial(currentTestimonial.id, 'position', value)}
+                  placeholder="Position..."
+                  className="text-gray-300 text-center inline-block"
+                />
+              )}
+              {currentTestimonial.position && currentTestimonial.company && ', '}
+              {(currentTestimonial.company || editMode) && (
+                <EditableTestimonialText
+                  value={currentTestimonial.company}
+                  onChange={(value) => updateTestimonial(currentTestimonial.id, 'company', value)}
+                  placeholder="Company..."
+                  className="text-gray-300 text-center inline-block ml-1"
+                />
+              )}
+            </p>
+          )}
         </div>
 
         {/* Pagination Dots */}
@@ -448,6 +487,7 @@ const Home = () => {
   const [saving, setSaving] = useState(false);
   const [savedNotification, setSavedNotification] = useState(false);
   const [featuredJobs, setFeaturedJobs] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
   
   // Newsletter subscription state
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -627,9 +667,39 @@ const Home = () => {
     }
   };
 
+  const fetchTestimonials = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('status', 'active')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+
+      // Transform database testimonials to match the expected format
+      const transformedTestimonials = data.map(testimonial => ({
+        id: testimonial.id,
+        quote: testimonial.text,
+        author: testimonial.name,
+        position: '', // We don't have position in the database
+        company: '', // We don't have company in the database
+        avatar: testimonial.name.split(' ').map(n => n[0]).join('').toUpperCase(), // Generate initials
+        image_url: testimonial.image_url // Add image URL for display
+      }));
+
+      setTestimonials(transformedTestimonials);
+    } catch (error) {
+      console.error('Error fetching testimonials:', error);
+      // Fall back to default testimonials if database fetch fails
+      setTestimonials([]);
+    }
+  };
+
   useEffect(() => {
     fetchContent();
     fetchFeaturedJobs();
+    fetchTestimonials();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1386,7 +1456,7 @@ const Home = () => {
             </h2>
           </div>
           <TestimonialsCarousel 
-            testimonials={pageContent.testimonials?.items || []}
+            testimonials={testimonials.length > 0 ? testimonials : (pageContent.testimonials?.items || [])}
             editMode={editMode}
             updateTestimonial={updateTestimonial}
             addTestimonial={addTestimonial}

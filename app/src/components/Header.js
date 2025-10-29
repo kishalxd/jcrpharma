@@ -10,9 +10,8 @@ const Header = () => {
   const navRef = useRef(null);
   const location = useLocation();
 
-  // Navigation items with their paths
+  // Navigation items with their paths (Home removed - logo click goes to home)
   const navItems = [
-    { path: '/', label: 'Home' },
     { path: '/specialisms', label: 'Specialisms' },
     { path: '/jobs', label: 'Jobs' },
     { path: '/blogs', label: 'Blogs' },
@@ -72,6 +71,12 @@ const Header = () => {
   useEffect(() => {
     const updateIndicatorPosition = () => {
       if (navRef.current) {
+        // Hide indicator when on home page since there's no Home tab
+        if (location.pathname === '/') {
+          setActiveIndicator({ left: 0, width: 0 });
+          return;
+        }
+        
         const activeNavItem = navRef.current.querySelector(`[data-path="${location.pathname}"]`);
         if (activeNavItem) {
           // Force a reflow to ensure accurate measurements
@@ -83,6 +88,9 @@ const Header = () => {
             left: itemRect.left - navRect.left,
             width: itemRect.width
           });
+        } else {
+          // No matching nav item found, hide indicator
+          setActiveIndicator({ left: 0, width: 0 });
         }
       }
     };
@@ -93,7 +101,7 @@ const Header = () => {
     });
     
     return () => cancelAnimationFrame(rafId);
-  }, [location.pathname, isScrolled]);
+  }, [location.pathname]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -101,7 +109,8 @@ const Header = () => {
   };
 
   const isActiveLink = (path) => {
-    if (path === '/' && location.pathname === '/') return true;
+    // Don't highlight any nav item when on home page since there's no Home tab
+    if (location.pathname === '/') return false;
     if (path !== '/' && location.pathname.startsWith(path)) return true;
     return false;
   };
@@ -116,12 +125,8 @@ const Header = () => {
   const isFormPage = location.pathname === '/find-jobs' || location.pathname === '/hire-talent';
 
   return (
-    <header className={`fixed top-0 left-0 right-0 bg-white z-50 transition-all duration-500 ease-in-out ${
-      isScrolled ? 'shadow-lg border-b border-gray-300 backdrop-blur-sm bg-white/95' : 'shadow-sm border-b border-gray-200'
-    }`}>
-      <div className={`mx-auto px-6 py-3 transition-all duration-500 ease-in-out ${
-        isScrolled ? 'max-w-[80%]' : 'container'
-      }`}>
+    <header className="fixed top-0 left-0 right-0 bg-white z-50 shadow-sm border-b border-gray-200">
+      <div className="container mx-auto px-6 py-3">
         {isFormPage ? (
           // Form page header layout
           <div className="flex items-center justify-between">
@@ -161,9 +166,7 @@ const Header = () => {
                 <img 
                   src="/logo_transparent.png" 
                   alt="JCR Logo" 
-                  className={`w-auto transition-all duration-500 ease-in-out ${
-                    isScrolled ? 'h-8' : 'h-10'
-                  }`}
+                  className="h-10 w-auto"
                 />
               </Link>
             </div>
@@ -171,8 +174,8 @@ const Header = () => {
             {/* Navigation - Centered with fluid indicator */}
             <nav 
               ref={navRef}
-              className={`hidden md:flex items-center justify-center relative transition-all duration-500`}
-              style={{ gap: isScrolled ? '4px' : '8px' }}
+              className="hidden md:flex items-center justify-center relative"
+              style={{ gap: '8px' }}
             >
               {/* Fluid background indicator */}
               <div 
@@ -207,47 +210,35 @@ const Header = () => {
             </nav>
             
             {/* Action Buttons */}
-            <div className={`flex items-center justify-end transition-all duration-500 ${
-              isScrolled ? 'space-x-2' : 'space-x-4'
-            }`}>
+            <div className="flex items-center justify-end space-x-4">
               {user ? (
-                <div className={`flex items-center transition-all duration-500 ${
-                  isScrolled ? 'space-x-2' : 'space-x-4'
-                }`}>
+                <div className="flex items-center space-x-4">
                   <Link
                     to="/hire-talent"
-                    className={`text-gray-700 hover:text-brand-blue transition-colors font-medium ${
-                      isScrolled ? 'hidden lg:block' : ''
-                    }`}
+                    className="text-gray-700 hover:text-brand-blue transition-colors font-medium"
                   >
                     Hire talent
                   </Link>
                   <Link
                     to="/find-jobs"
-                    className={`bg-brand-blue hover:bg-blue-700 text-white rounded-full transition-all duration-300 font-medium ${
-                      isScrolled ? 'px-4 py-1.5 text-sm' : 'px-6 py-2'
-                    }`}
+                    className="bg-brand-blue hover:bg-blue-700 text-white px-6 py-2 rounded-full transition-all duration-300 font-medium"
                   >
                     Find Jobs
                   </Link>
                   <div className="relative">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className={`flex items-center text-gray-700 hover:text-brand-blue transition-colors ${
-                        isScrolled ? 'ml-2 space-x-1' : 'ml-4 space-x-2'
-                      }`}
+                      className="flex items-center ml-4 space-x-2 text-gray-700 hover:text-brand-blue transition-colors"
                     >
-                      <div className={`bg-brand-blue rounded-full flex items-center justify-center ${
-                        isScrolled ? 'w-7 h-7' : 'w-8 h-8'
-                      }`}>
+                      <div className="bg-brand-blue w-8 h-8 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-white">
                           {user.user_metadata?.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                         </span>
                       </div>
-                      <span className={`font-medium ${isScrolled ? 'hidden' : 'hidden sm:block'}`}>
+                      <span className="font-medium hidden sm:block">
                         {user.user_metadata?.firstName || 'User'}
                       </span>
-                      <svg className={`fill-none stroke-current ${isScrolled ? 'w-3 h-3 hidden' : 'w-4 h-4'}`} viewBox="0 0 24 24">
+                      <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
@@ -272,22 +263,16 @@ const Header = () => {
                   </div>
                 </div>
               ) : (
-                <div className={`flex items-center transition-all duration-500 ${
-                  isScrolled ? 'space-x-2' : 'space-x-4'
-                }`}>
+                <div className="flex items-center space-x-4">
                   <Link
                     to="/hire-talent"
-                    className={`text-gray-700 hover:text-brand-blue transition-colors font-medium ${
-                      isScrolled ? 'hidden lg:block' : ''
-                    }`}
+                    className="text-gray-700 hover:text-brand-blue transition-colors font-medium"
                   >
                     Hire talent
                   </Link>
                   <Link
                     to="/find-jobs"
-                    className={`bg-brand-blue hover:bg-blue-700 text-white rounded-full transition-all duration-300 font-medium ${
-                      isScrolled ? 'px-4 py-1.5 text-sm' : 'px-6 py-2'
-                    }`}
+                    className="bg-brand-blue hover:bg-blue-700 text-white px-6 py-2 rounded-full transition-all duration-300 font-medium"
                   >
                     Find Jobs
                   </Link>

@@ -89,6 +89,14 @@ function App() {
               } 
             />
             <Route 
+              path="/admin/testimonials" 
+              element={
+                <AdminProtectedRoute>
+                  <AdminDashboard activeTab="testimonials" />
+                </AdminProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/newsletter-subscriptions" 
               element={
                 <AdminProtectedRoute>

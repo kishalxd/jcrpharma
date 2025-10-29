@@ -125,7 +125,29 @@ CREATE INDEX idx_newsletter_subscriptions_status ON newsletter_subscriptions(sta
 CREATE INDEX idx_newsletter_subscriptions_created_at ON newsletter_subscriptions(created_at DESC);
 ```
 
-### 6. Disable RLS (for now)
+### 6. Testimonials Table (`testimonials`)
+
+```sql
+-- Create the testimonials table
+CREATE TABLE public.testimonials (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL,
+    text TEXT NOT NULL,
+    image_url TEXT,
+    image_name TEXT,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+    display_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_testimonials_status ON testimonials(status);
+CREATE INDEX idx_testimonials_display_order ON testimonials(display_order);
+CREATE INDEX idx_testimonials_created_at ON testimonials(created_at DESC);
+```
+
+### 7. Disable RLS (for now)
 
 ```sql
 -- Disable RLS for all tables (following the same pattern as your existing tables)
@@ -134,6 +156,7 @@ ALTER TABLE public.hiring_requests DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.jobs DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.page_contents DISABLE ROW LEVEL SECURITY;
 ALTER TABLE public.newsletter_subscriptions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.testimonials DISABLE ROW LEVEL SECURITY;
 ```
 
 ## Table Structures
@@ -212,36 +235,74 @@ ALTER TABLE public.newsletter_subscriptions DISABLE ROW LEVEL SECURITY;
 | `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
 | `updated_at` | TIMESTAMP | Last update timestamp | Auto-generated |
 
+### Testimonials Table
+
+| Column | Type | Description | Constraints |
+|--------|------|-------------|-------------|
+| `id` | UUID | Primary key | Auto-generated |
+| `name` | TEXT | Person's name | NOT NULL |
+| `text` | TEXT | Testimonial text | NOT NULL |
+| `image_url` | TEXT | Supabase storage URL for photo | Optional |
+| `image_name` | TEXT | Original image filename | Optional |
+| `status` | TEXT | Testimonial status | Default: 'active', CHECK constraint |
+| `display_order` | INTEGER | Display order for sorting | Default: 0 |
+| `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
+| `updated_at` | TIMESTAMP | Last update timestamp | Auto-generated |
+
 ## File Storage Setup
 
-For CV file uploads, you'll need to create a Supabase Storage bucket:
+For file uploads, you'll need to create Supabase Storage buckets:
 
+### CV Files Bucket
 1. Go to your Supabase dashboard
 2. Navigate to Storage
 3. Create a new bucket called `cv-files`
 4. Set the bucket to be private (not public)
 5. Configure RLS policies for the bucket (see below)
 
+### Testimonial Images Bucket
+1. Create a new bucket called `testimonial-images`
+2. Set the bucket to be public (for displaying images on the website)
+3. Configure RLS policies for the bucket (see below)
+
 ### Storage RLS Policies
 
 Run these SQL commands in your Supabase SQL Editor to allow file uploads:
 
 ```sql
+-- CV Files Policies
 -- Allow anyone to upload files to cv-files bucket
-CREATE POLICY "Allow file uploads" ON storage.objects
+CREATE POLICY "Allow CV file uploads" ON storage.objects
 FOR INSERT WITH CHECK (bucket_id = 'cv-files');
 
 -- Allow anyone to download files from cv-files bucket (for admin downloads)
-CREATE POLICY "Allow file downloads" ON storage.objects
+CREATE POLICY "Allow CV file downloads" ON storage.objects
 FOR SELECT USING (bucket_id = 'cv-files');
 
 -- Optional: Allow file updates (if you need to replace files)
-CREATE POLICY "Allow file updates" ON storage.objects
+CREATE POLICY "Allow CV file updates" ON storage.objects
 FOR UPDATE USING (bucket_id = 'cv-files');
 
 -- Optional: Allow file deletions (for admin cleanup)
-CREATE POLICY "Allow file deletions" ON storage.objects
+CREATE POLICY "Allow CV file deletions" ON storage.objects
 FOR DELETE USING (bucket_id = 'cv-files');
+
+-- Testimonial Images Policies
+-- Allow anyone to upload files to testimonial-images bucket
+CREATE POLICY "Allow testimonial image uploads" ON storage.objects
+FOR INSERT WITH CHECK (bucket_id = 'testimonial-images');
+
+-- Allow anyone to view testimonial images (public bucket)
+CREATE POLICY "Allow testimonial image downloads" ON storage.objects
+FOR SELECT USING (bucket_id = 'testimonial-images');
+
+-- Allow file updates for testimonial images
+CREATE POLICY "Allow testimonial image updates" ON storage.objects
+FOR UPDATE USING (bucket_id = 'testimonial-images');
+
+-- Allow file deletions for testimonial images
+CREATE POLICY "Allow testimonial image deletions" ON storage.objects
+FOR DELETE USING (bucket_id = 'testimonial-images');
 ```
 
 **Alternative: Disable RLS for Storage (Less Secure)**
@@ -287,6 +348,10 @@ REACT_APP_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_supabase_anon_key
 ### Newsletter Subscriptions
 - `active` - Subscriber is active and receiving newsletters
 - `unsubscribed` - Subscriber has opted out of newsletters
+
+### Testimonials
+- `active` - Testimonial is published and visible on the website
+- `inactive` - Testimonial is hidden from the website
 
 ### Work Modes (Jobs)
 - `Remote` - Fully remote work
