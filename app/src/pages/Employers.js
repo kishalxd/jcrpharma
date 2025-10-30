@@ -250,12 +250,12 @@ const Employers = () => {
 
   const faqData = [
     {
-      question: "What is your average time-to-hire for specialized roles?",
-      answer: "Our average time-to-hire is 14 days for most specialized biometrics and data science roles. For senior positions, we typically deliver qualified candidates within 21 days."
+      question: "What is your average time-to-hire for specialised roles?",
+      answer: "Our average time-to-hire is 21 days for most specialised biometrics and data science roles. For senior positions, we typically deliver qualified candidates within 21 days."
     },
     {
       question: "Do you provide candidates with regulatory compliance experience?",
-      answer: "Yes, all our candidates are pre-screened for regulatory compliance knowledge including FDA, EMA, and ICH guidelines relevant to their specialization."
+      answer: "Yes, all our candidates are pre-screened for regulatory compliance knowledge including FDA, EMA, and ICH guidelines relevant to their specialisation."
     },
     {
       question: "What geographical markets do you cover?",
@@ -267,7 +267,7 @@ const Employers = () => {
     },
     {
       question: "Do you offer contract and permanent placements?",
-      answer: "Yes, we provide both contract and permanent placement solutions, tailored to your specific project needs and organizational requirements."
+      answer: "Yes, we provide both contract and permanent placement solutions, tailored to your specific project needs and organisational requirements."
     }
   ];
 
@@ -324,15 +324,15 @@ const Employers = () => {
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-8'
             }`}>
-              Hire biometrics & data talent, fast
+              Hire Biometrics & Data Talent, Fast
             </h1>
             <p className={`text-gray-300 text-xl mb-12 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-400 ${
               heroVisible 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-8'
             }`}>
-              Access pre-vetted specialists in biostatistics, clinical data management, and bioinformatics. 
-              <AnimatedCounter end={14} className="font-semibold" />-day average placement with <AnimatedCounter end={92} suffix="%" className="font-semibold" /> success rate.
+              Access pre-vetted specialists in biostatistics, clinical data management, and bioinformatics. <br></br>
+              <AnimatedCounter end={21} className="font-semibold" />-days average placement with <AnimatedCounter end={95} suffix="%" className="font-semibold" /> success rate.
             </p>
             
             {/* CTA Buttons */}
@@ -376,10 +376,10 @@ const Employers = () => {
           >
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our USPs</p>
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Why leading companies choose us
+              Why Leading Companies Choose Us
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Specialized recruitment that delivers speed, quality, compliance, and global reach
+              Specialised recruitment that delivers speed, quality, compliance, and global reach
             </p>
           </div>
 
@@ -397,7 +397,7 @@ const Employers = () => {
               </div>
               <h3 className="text-xl font-medium mb-4 text-gray-900">Speed</h3>
               <p className="text-gray-600 leading-relaxed">
-                <AnimatedCounter end={14} className="font-semibold" />-day average placement with streamlined processes and pre-qualified talent pools
+                <AnimatedCounter end={21} className="font-semibold" />-days average placement with streamlined processes and pre-qualified talent pools
               </p>
             </div>
 
@@ -468,7 +468,7 @@ const Employers = () => {
           >
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our process</p>
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              How we deliver exceptional results
+              How We Deliver Exceptional Results
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
               Detailed process with guaranteed SLAs and transparent communication
@@ -752,7 +752,7 @@ const Employers = () => {
           <div className="text-center mb-16">
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Global presence</p>
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Coverage across key markets
+              Coverage Across Key Markets
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
               Strategic presence in major life-sciences hubs with local market expertise
@@ -827,7 +827,7 @@ const Employers = () => {
               Tell us about your hiring needs
             </h2>
             <p className="text-gray-600 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Submit your requirements and we'll provide a tailored recruitment strategy within 24 hours. Connect with specialized talent across biostatistics, clinical data management, and bioinformatics.
+              Submit your requirements and we'll provide a tailored recruitment strategy within 24 hours. Connect with specialised talent across biostatistics, clinical data management, and bioinformatics.
             </p>
             
             <div className="flex justify-center">
@@ -922,7 +922,7 @@ const Employers = () => {
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-8'
             }`}>
-              Join leading pharmaceutical and biotech companies who trust us to deliver specialized talent fast
+              Join leading pharmaceutical and biotech companies who trust us to deliver specialised talent fast
             </p>
             
             {/* CTA Button */}
@@ -994,7 +994,7 @@ const Employers = () => {
 
               {/* Specializations */}
               <div>
-                <h4 className="text-white font-medium mb-6">Specializations</h4>
+                <h4 className="text-white font-medium mb-6">Specialisations</h4>
                 <ul className="space-y-4">
                   <li><a href="/specialisms?focus=biostatistics" className="text-gray-300 hover:text-white transition-colors text-sm">Biostatistics</a></li>
                   <li><a href="/specialisms?focus=clinical" className="text-gray-300 hover:text-white transition-colors text-sm">Clinical Data Management</a></li>

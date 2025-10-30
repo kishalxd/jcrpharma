@@ -164,18 +164,10 @@ const About = () => {
                   Our Mission
                 </h2>
                 <p className="text-gray-600 text-lg mb-6 leading-relaxed">
-                  JCR Pharma was founded to transform recruitment in the life-sciences sector. 
-                  Moving away from outdated, transactional approaches, we operate as true partners 
-                  to our clients and candidates. Our specialized focus on biometrics, biostatistics, 
-                  and clinical data management is built on genuine consultation, integrity, and 
-                  long-term relationship building.
+                JCR Pharma was founded on a simple belief: recruitment in the life sciences industry can and should be done better. After years of working within agencies that chased numbers instead of people, we set out to build something different. We wanted a consultancy that leads with honesty, transparency, and partnership. Our team specialises in biometrics, biostatistics, and clinical data management recruitment, helping pharmaceutical, biotech, and CRO organisations across the UK and Europe find talent that truly fits. A candidate should not only meet the requirements on paper but also align with a company’s culture, purpose, and long-term goals.
                 </p>
                 <p className="text-gray-600 text-lg leading-relaxed">
-                  We believe recruitment should be honest and consultative, not pushy or disingenuous. 
-                  Every client and candidate relationship is treated with respect, and we admit when 
-                  we make mistakes — because we're human — while constantly striving to be better. 
-                  JCR Pharma isn't just a business; it's a passion project dedicated to showing 
-                  the market that recruitment can be done differently.
+                We do not measure success by how many CVs we send. We measure it by the relationships we build and by the impact our candidates make. Every search begins with listening, every conversation with understanding, and every placement with trust. JCR Pharma is more than a business to us. It is a commitment to doing recruitment with integrity, empathy, and genuine care for the science that shapes lives.
                 </p>
               </div>
               <div className="order-first lg:order-last lg:pt-16">
@@ -272,7 +264,7 @@ const About = () => {
                   Managing Director / Founder
                 </p>
                 <p className="text-gray-600 leading-relaxed mb-6">
-                  James brings 10 years of recruitment experience, including 5+ years specialized 
+                  James brings 10 years of recruitment experience, including 5+ years specialised 
                   in Biometrics. After graduating from the University of Hertfordshire with a 
                   degree in History, he began in graduate and Rec2Rec recruitment before transitioning 
                   to life sciences. James built Biometrics desks from scratch across multiple agencies, 
@@ -329,10 +321,10 @@ const About = () => {
                   Principal Consultant
                 </p>
                 <p className="text-gray-600 leading-relaxed mb-6">
-                  With five years of specialized recruitment experience in the biometrics space within pharmaceuticals, 
+                  With five years of specialised recruitment experience in the biometrics space within pharmaceuticals, 
                   Mathy began her career at Phaidon International before joining Veramed as an internal recruiter. 
                   During her three years at Veramed, she worked directly with statisticians and programmers, 
-                  making numerous placements across biotech, pharmaceutical, and CRO organizations. Her deep 
+                  making numerous placements across biotech, pharmaceutical, and CRO organisations. Her deep 
                   understanding of the industry was further strengthened through attending key conferences like 
                   PhUSE in London. Mathy joined JCR in 2024, drawn by the company's people-first ethos and 
                   commitment to building long-term relationships. Based in Vienna, Austria, she focuses on 
@@ -364,7 +356,7 @@ const About = () => {
               Our Values
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              The principles that guide our approach to life-sciences recruitment
+              Our Recruitment Values in Life-Sciences & Biostatistics
             </p>
           </div>
 
@@ -378,8 +370,7 @@ const About = () => {
               </div>
               <h3 className="text-xl font-medium mb-4 text-gray-900">Excellence</h3>
               <p className="text-gray-600 leading-relaxed">
-                We maintain the highest standards in candidate assessment and client service, 
-                ensuring exceptional quality in every placement.
+              We uphold the highest standards in biostatistics candidate assessment and life-science client service.
               </p>
             </div>
 
@@ -392,8 +383,7 @@ const About = () => {
               </div>
               <h3 className="text-xl font-medium mb-4 text-gray-900">Integrity</h3>
               <p className="text-gray-600 leading-relaxed">
-                Transparent communication and ethical practices build lasting relationships 
-                with both candidates and clients.
+              Transparent, data-driven communication builds long-term trust with our pharma and CRO partners.
               </p>
             </div>
 
@@ -406,8 +396,7 @@ const About = () => {
               </div>
               <h3 className="text-xl font-medium mb-4 text-gray-900">Expertise</h3>
               <p className="text-gray-600 leading-relaxed">
-                Deep specialization in life-sciences domains enables us to understand 
-                complex technical requirements and industry nuances.
+              Our recruiters’ deep biometrics domain knowledge enables precise technical placements.
               </p>
             </div>
           </div>
@@ -430,7 +419,7 @@ const About = () => {
             <div className="text-center opacity-0" data-animate-delay="0">
               <div className="text-5xl md:text-6xl font-light text-brand-blue mb-2">
                 <AnimatedCounter
-                  targetValue="150+"
+                  targetValue="90+"
                   className="text-5xl md:text-6xl font-light text-brand-blue"
                 />
               </div>
@@ -439,16 +428,16 @@ const About = () => {
             <div className="text-center opacity-0" data-animate-delay="100">
               <div className="text-5xl md:text-6xl font-light text-brand-blue mb-2">
                 <AnimatedCounter
-                  targetValue="14"
+                  targetValue="3"
                   className="text-5xl md:text-6xl font-light text-brand-blue"
                 />
               </div>
-              <p className="text-gray-700 text-lg">Days Average Placement</p>
+              <p className="text-gray-700 text-lg">Weeks Average Time-to-Hire</p>
             </div>
             <div className="text-center opacity-0" data-animate-delay="200">
               <div className="text-5xl md:text-6xl font-light text-brand-blue mb-2">
                 <AnimatedCounter
-                  targetValue="92%"
+                  targetValue="95%"
                   className="text-5xl md:text-6xl font-light text-brand-blue"
                 />
               </div>
@@ -461,7 +450,7 @@ const About = () => {
                   className="text-5xl md:text-6xl font-light text-brand-blue"
                 />
               </div>
-              <p className="text-gray-700 text-lg">Partner Organizations</p>
+              <p className="text-gray-700 text-lg">Partner Organisations</p>
             </div>
           </div>
         </div>

@@ -121,7 +121,7 @@ const ParallaxTimelineSection = ({ timeline }) => {
         <div ref={headerRef} className="text-center transition-all duration-200" style={{ opacity: 0 }}>
           <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our Process</p>
           <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-            How it works
+            How It Works
           </h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
             Our comprehensive 9-step recruitment process ensures you find the perfect role with full support
@@ -360,7 +360,7 @@ const Candidates = () => {
       answer: 'We use our deep industry knowledge and extensive network to match your skills, experience, and career goals with the best opportunities in biometrics and life sciences.'
     },
     {
-      question: 'What types of roles do you specialize in?',
+      question: 'What types of roles do you specialise in?',
       answer: 'We focus on biostatistics, clinical data management, bioinformatics, statistical programming, and related life sciences roles across pharmaceutical, biotech, and CRO sectors.'
     },
     {
@@ -373,7 +373,7 @@ const Candidates = () => {
     },
     {
       question: 'Do you work with candidates at all experience levels?',
-      answer: 'Yes, we work with candidates from entry-level to C-suite positions across all experience levels in our specialized areas.'
+      answer: 'Yes, we work with candidates from entry-level to C-suite positions across all experience levels in our specialised areas.'
     }
   ];
 
@@ -503,8 +503,8 @@ const Candidates = () => {
               Your next role in<br />biometrics
             </h1>
             <p className="text-gray-300 text-xl mb-12 max-w-3xl mx-auto leading-relaxed">
-              Connect with leading pharmaceutical and biotech organizations. 
-              Find your perfect role with specialized recruitment experts who understand your field.
+              Connect with leading pharmaceutical and biotech organisations. 
+              Find your perfect role with specialised recruitment experts who understand your field.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -536,7 +536,7 @@ const Candidates = () => {
               Featured opportunities
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Discover the latest roles from our partner organizations
+              Discover the latest roles from our partner organisations
             </p>
           </div>
 
@@ -692,7 +692,7 @@ const Candidates = () => {
               Get started today
             </h2>
             <p className="text-gray-600 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Submit your CV and preferences to receive personalized job alerts and opportunities from leading life sciences organizations.
+              Submit your CV and preferences to receive personalised job alerts and opportunities from leading life sciences organisations.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -751,36 +751,6 @@ const Candidates = () => {
                   )}
                 </div>
               ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Global CTA Section */}
-      <section className="bg-brand-blue py-20 opacity-0" data-animate>
-        <div className="container mx-auto px-6">
-          <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-white">
-              Ready to advance your career?
-            </h2>
-            <p className="text-gray-300 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Join thousands of life sciences professionals who have found their ideal roles through JCR. 
-              Let our expertise work for you.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button 
-                onClick={() => navigate('/find-jobs')}
-                className="bg-white text-brand-blue hover:bg-gray-100 px-8 py-3 rounded-full transition-all duration-300 font-medium"
-              >
-                Upload Your CV
-              </button>
-              <button 
-                onClick={() => navigate('/jobs')}
-                className="text-white hover:bg-white/10 px-8 py-3 rounded-full transition-all duration-300 font-medium border border-white/30"
-              >
-                Browse All Jobs
-              </button>
             </div>
           </div>
         </div>
@@ -849,7 +819,7 @@ const Candidates = () => {
                   />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">
-                  Specialized recruitment for life sciences data and biometrics professionals across global markets.
+                  Specialised recruitment for life sciences data and biometrics professionals across global markets.
                 </p>
               </div>
 

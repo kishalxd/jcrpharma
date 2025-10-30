@@ -425,10 +425,10 @@ const Specializations = () => {
         <div className="container mx-auto px-6 py-20">
           <div className="text-center text-white">
             <h1 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
-              Life Sciences Specializations
+              Life Sciences Specialisations
             </h1>
             <p className="text-gray-300 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Discover our specialized recruitment expertise across key areas of life sciences, biotechnology, and pharmaceutical research.
+              Discover Our Specialised Recruitment Expertise Across Key Areas of Life Sciences, Biotechnology, and Pharmaceutical Research.
             </p>
           </div>
         </div>
@@ -464,29 +464,116 @@ const Specializations = () => {
               <div className="grid lg:grid-cols-2 gap-0">
                 {/* Left side - Main Content */}
                 <div className="p-8 lg:p-12">
-                <h2 className="text-3xl lg:text-4xl font-light text-gray-900 mb-6 leading-tight">
-                  Experts in {specializations[activeSpecialism].title.toLowerCase()} recruitment
-                </h2>
-                
-                <div className="space-y-6 text-gray-700 leading-relaxed">
-                  <p className="text-lg">
-                    At JCR Pharma, we work with some of the most innovative and dynamic companies in the life sciences sector, helping them find the best {specializations[activeSpecialism].title.toLowerCase()} talent for their projects and goals. We also build long-term relationships with candidates, understanding their skills, motivations and aspirations, and matching them with the right opportunities.
-                  </p>
-                  
-                  <p>
-                    As experienced recruiters, we have a deep knowledge of the {specializations[activeSpecialism].title.toLowerCase()} sector, as well as excellent communication, negotiation and problem-solving skills. We adapt our solutions in line with market changes and don't just recruit, we create solutions – our specialist teams will work with you to develop a recruitment strategy depending on your needs, as opposed to a 'one-size-fits-all' approach.
-                  </p>
-                </div>
-                
-                <div className="mt-8">
-                  <h3 className="text-2xl font-light text-gray-900 mb-4">
-                    Our approach
-                  </h3>
-                  <p className="text-gray-700 leading-relaxed">
-                    {specializations[activeSpecialism].longDescription}
-                  </p>
-                </div>
+                  {activeSpecialism === 'biostatistics' && (
+                    <>
+                      <h2 className="text-3xl lg:text-4xl font-light text-gray-900 mb-6 leading-tight">
+                        Specialists in connecting leading biostatistics professionals with the teams who need them most.
+                      </h2>
+                      <div className="space-y-6 text-gray-700 leading-relaxed">
+                        <p className="text-lg">
+                        At JCR Pharma, we understand that precision in biostatistics drives every sound clinical decision. We partner with leading pharmaceutical, biotech, and CRO organisations to connect them with analytical minds who bring structure to uncertainty. Our recruitment approach is grounded in partnership, transparency, and an understanding that behind every dataset lies a decision that can change lives.
+                        </p>
+                        <p>
+                        Our consultants specialise in recruiting across statistical programming, study design, and trial analysis. We stay close to market shifts in biometrics and adaptive trial modelling, ensuring every placement adds measurable value to both data quality and regulatory success. Whether the role is operational or strategic, we focus on precision, communication, and cultural fit.
+                        </p>
                       </div>
+                      <div className="mt-8">
+                        <h3 className="text-2xl font-light text-gray-900 mb-4">Our approach</h3>
+                        <p className="text-gray-700 leading-relaxed">
+                        We help you build teams that transform raw data into clear insight. From senior biostatisticians to emerging analysts, our network brings the right balance of technical rigour and collaborative mindset. When accuracy matters most, JCR Pharma delivers recruitment that’s as exacting as the science itself.
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {activeSpecialism === 'clinical' && (
+                    <>
+                      <h2 className="text-3xl lg:text-4xl font-light text-gray-900 mb-6 leading-tight">
+                        Trusted partners in recruiting clinical data management talent for global studies.
+                      </h2>
+                      <div className="space-y-6 text-gray-700 leading-relaxed">
+                        <p className="text-lg">
+                        In clinical data management, structure and reliability define success. JCR Pharma partners with life sciences organisations that value integrity in every data point. Our consultative recruitment model ensures that each professional we place strengthens your study’s accuracy, compliance, and operational efficiency.
+                        </p>
+                        <p>
+                        Our team understands the nuances of CDM roles, from clinical data managers and data coordinators to data standards specialists and tailors search strategies around therapeutic area and study phase. We know the systems, workflows, and regulatory standards that drive modern data integrity.
+                        </p>
+                      </div>
+                      <div className="mt-8">
+                        <h3 className="text-2xl font-light text-gray-900 mb-4">Our approach</h3>
+                        <p className="text-gray-700 leading-relaxed">
+                        The best data management professionals don’t just maintain datasets; they anticipate problems before they occur. That’s the difference our recruitment approach delivers. JCR Pharma helps you secure professionals who ensure that every trial, every record, and every submission stands up to the highest scientific and ethical standards.
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {activeSpecialism === 'statistical-programming' && (
+                    <>
+                      <h2 className="text-3xl lg:text-4xl font-light text-gray-900 mb-6 leading-tight">
+                      Focused on hiring the statistical programmers who keep research moving and submissions on track.
+                      </h2>
+                      <div className="space-y-6 text-gray-700 leading-relaxed">
+                        <p className="text-lg">
+                        Behind every successful clinical study is a team of statistical programmers translating data into results that regulators can trust. At JCR Pharma, we connect pharmaceutical and CRO partners with experts who blend technical excellence with a problem-solving mindset. We value collaboration as much as code, ensuring every match supports long-term project outcomes.
+                        </p>
+                        <p>
+                        Our recruitment covers SAS, R, and Python programmers with experience across various submission-ready deliverables. We understand the fast-moving landscape of automation, reproducibility, and traceability in programming, and we adapt quickly to evolving standards. Each search is guided by your project’s timeline, team structure, and data complexity.
+                        </p>
+                      </div>
+                      <div className="mt-8">
+                        <h3 className="text-2xl font-light text-gray-900 mb-4">Our approach</h3>
+                        <p className="text-gray-700 leading-relaxed">
+                        When deadlines are tight and precision is non-negotiable, the right programmer can make all the difference. JCR Pharma helps you build programming teams that are not only technically capable but strategically aligned.
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {activeSpecialism === 'data-science' && (
+                    <>
+                      <h2 className="text-3xl lg:text-4xl font-light text-gray-900 mb-6 leading-tight">
+                        Recruiting data science talent that drives smarter decisions and faster discovery
+                      </h2>
+                      <div className="space-y-6 text-gray-700 leading-relaxed">
+                        <p className="text-lg">
+                        Data science is reshaping the future of medicine: from predictive analytics to AI-driven discovery. JCR Pharma partners with forward-thinking pharmaceutical and biotech organisations to recruit data scientists who can turn complex data into meaningful insight. We believe recruitment should fuel innovation, not slow it down.
+                        </p>
+                        <p>
+                        Our network includes professionals skilled in machine learning, real-world evidence, and advanced statistical modelling across drug development and commercial analytics. We stay ahead of trends in data governance, FAIR principles, and the integration of AI into regulated environments. Every placement is designed to enhance capability in research, development, and decision intelligence.
+                        </p>
+                      </div>
+                      <div className="mt-8">
+                        <h3 className="text-2xl font-light text-gray-900 mb-4">Our approach</h3>
+                        <p className="text-gray-700 leading-relaxed">
+                        We help employers hire thinkers who build the future of data. From predictive modelers to AI engineers, JCR Pharma delivers professionals who combine scientific understanding with creative application.
+                        </p>
+                      </div>
+                    </>
+                  )}
+
+                  {activeSpecialism === 'bioinformatics' && (
+                    <>
+                      <h2 className="text-3xl lg:text-4xl font-light text-gray-900 mb-6 leading-tight">
+                        Connecting bioinformatics specialists with organisations pushing the boundaries of precision medicine
+                      </h2>
+                      <div className="space-y-6 text-gray-700 leading-relaxed">
+                        <p className="text-lg">
+                        In bioinformatics, discovery depends on the perfect balance of biology, data, and computation. JCR Pharma supports life sciences companies in building teams that push the boundaries of genomics, proteomics, and systems biology. We understand that innovation starts with people who see patterns others can’t.
+                        </p>
+                        <p>
+                        We recruit across next-generation sequencing, multi-omics data analysis, and computational biology, supporting research in biomarker discovery, target validation, and precision medicine. Our consultants speak the same language as your scientists, from RNA-seq to machine learning pipelines, and focus on aligning technical depth with scientific curiosity.
+                        </p>
+                      </div>
+                      <div className="mt-8">
+                        <h3 className="text-2xl font-light text-gray-900 mb-4">Our approach</h3>
+                        <p className="text-gray-700 leading-relaxed">
+                        Every bioinformatics hire you make shapes the pace of innovation. JCR Pharma helps you find computational biologists and bioinformatics experts who don’t just interpret data but uncover the insights that lead to new breakthroughs in human health.
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
                 
                 {/* Right side - What we offer */}
                 <div className="bg-gray-50 p-8 lg:p-12">
@@ -495,7 +582,7 @@ const Specializations = () => {
                 </h3>
                 
                 <p className="text-gray-700 mb-8 leading-relaxed">
-                  We specialize in recruiting for a range of areas within {specializations[activeSpecialism].title.toLowerCase()}, such as:
+                  We specialise in recruiting for a range of areas within {specializations[activeSpecialism].title.toLowerCase()}, such as:
                 </p>
                 
                 {/* Key Areas List */}
@@ -599,7 +686,7 @@ const Specializations = () => {
               </div>
               <h3 className="text-xl font-medium mb-4 text-gray-900">Experts</h3>
               <p className="text-gray-600 leading-relaxed">
-                Deep specialization in life sciences with 10+ years of sector expertise and extensive industry knowledge
+                Deep specialisation in life sciences with 10+ years of sector expertise and extensive industry knowledge
               </p>
             </div>
           </div>

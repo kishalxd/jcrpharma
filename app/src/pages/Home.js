@@ -109,31 +109,31 @@ const ParallaxUSPSection = () => {
 
   const uspItems = [
     {
-      title: "Quality over quantity",
+      title: "Quality Over Quantity",
       icon: (
         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
       ),
-      description: "We don't just send countless CVs. We find 5-7 CVs on paper that are perfect for the role. You then pick your favourite through the recruitment process.",
+      description: "We believe hiring in life sciences should never be about numbers. Our recruiters focus on precision, not volume. We shortlist only the five to seven candidates who genuinely match your technical needs, team culture, and long-term goals. Whether you are hiring a biostatistician, a data scientist, or a clinical programmer, we make sure every recommendation is the right fit from the start.",
     },
     {
-      title: "Consultative approach",
+      title: "Consultative Approach",
       icon: (
         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
       ),
-      description: "Working as a collaborative team with you, advising you through the process, and giving you valuable insights to the industry.",
+      description: "We work alongside you as a partner, not a supplier. Every search begins with a conversation. We take time to understand your team, your data systems, and your upcoming projects. With years of experience in biometrics and pharmaceutical recruitment, our consultative approach helps you plan ahead and hire with confidence.",
     },
     {
-      title: "Specialized experts",
+      title: "Specialised Experts",
       icon: (
         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
         </svg>
       ),
-      description: "We're specialized. We don't recruit everything. Our network is advanced and deep within the industry, and we constantly have our finger on the pulse.",
+      description: "Our focus is intentionally narrow. We recruit within biometrics, biostatistics, data science, and clinical data management. These are the areas where we know the people, the challenges, and the opportunities. Our deep specialisation across the UK, EU, and US life sciences markets helps us stay ahead of change and deliver lasting results for every client.",
     },
   ];
 
@@ -219,7 +219,7 @@ const ParallaxUSPSection = () => {
             Our unique value proposition
           </h2>
           <p className="text-gray-300 text-lg max-w-3xl mx-auto">
-            Specialized recruitment strategies that deliver exceptional results
+            Specialised recruitment strategies that deliver exceptional results
           </p>
         </div>
 
@@ -373,9 +373,9 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
           {/* Left Arrow - Positioned relative to testimonial text */}
           <button 
             onClick={prevTestimonial}
-            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-16 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white/30 transition-shadow"
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-16 w-12 h-12 bg-brand-blue/10 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-brand-blue/20 transition-shadow"
           >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -383,14 +383,14 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
           {/* Right Arrow - Positioned relative to testimonial text */}
           <button 
             onClick={nextTestimonial}
-            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-16 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-white/30 transition-shadow"
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-16 w-12 h-12 bg-brand-blue/10 backdrop-blur-sm rounded-full shadow-md flex items-center justify-center hover:bg-brand-blue/20 transition-shadow"
           >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
 
-          <blockquote className="text-xl md:text-2xl font-light text-white mb-12 max-w-4xl mx-auto leading-relaxed">
+          <blockquote className="text-xl md:text-2xl font-light text-brand-blue mb-12 max-w-4xl mx-auto leading-relaxed">
             "
             {editMode ? (
               <EditableTestimonialText
@@ -398,7 +398,7 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
                 onChange={(value) => updateTestimonial(currentTestimonial.id, 'quote', value)}
                 multiline={true}
                 placeholder="Enter testimonial quote..."
-                className="text-xl md:text-2xl font-light text-white leading-relaxed inline-block w-full"
+                className="text-xl md:text-2xl font-light text-brand-blue leading-relaxed inline-block w-full"
               />
             ) : (
               currentTestimonial.quote
@@ -430,22 +430,22 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
           </div>
 
           {/* Name and Position */}
-          <h4 className="text-lg font-medium text-white mb-1">
+          <h4 className="text-lg font-medium text-brand-blue mb-1">
             <EditableTestimonialText
               value={currentTestimonial.author}
               onChange={(value) => updateTestimonial(currentTestimonial.id, 'author', value)}
               placeholder="Author name..."
-              className="text-lg font-medium text-white text-center block w-full"
+              className="text-lg font-medium text-brand-blue text-center block w-full"
             />
           </h4>
           {(currentTestimonial.position || currentTestimonial.company || editMode) && (
-            <p className="text-gray-300">
+            <p className="text-brand-blue">
               {(currentTestimonial.position || editMode) && (
                 <EditableTestimonialText
                   value={currentTestimonial.position}
                   onChange={(value) => updateTestimonial(currentTestimonial.id, 'position', value)}
                   placeholder="Position..."
-                  className="text-gray-300 text-center inline-block"
+                  className="text-brand-blue text-center inline-block"
                 />
               )}
               {currentTestimonial.position && currentTestimonial.company && ', '}
@@ -454,7 +454,7 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
                   value={currentTestimonial.company}
                   onChange={(value) => updateTestimonial(currentTestimonial.id, 'company', value)}
                   placeholder="Company..."
-                  className="text-gray-300 text-center inline-block ml-1"
+                  className="text-brand-blue text-center inline-block ml-1"
                 />
               )}
             </p>
@@ -515,8 +515,8 @@ const Home = () => {
   // Default content (fallback)
   const defaultContent = {
     hero: {
-      title: "Life-sciences data &\nbiometrics recruitment",
-      subtitle: "Specialized talent solutions for biotech and pharmaceutical industries across UK, EU, and\nUS markets."
+      title: "Life Sciences, Biometrics & Data Recruitment Specialists",
+      subtitle: "We help biotech and pharmaceutical companies build world-class teams in biostatistics, clinical data management, and data science, connecting life-sciences professionals with employers across the UK, USA, and Europe."
     },
     specialisms: {
       title: "Our recruitment expertise",
@@ -536,7 +536,7 @@ const Home = () => {
     },
     excellence: {
       title: "Measuring our recruitment\nexcellence",
-      subtitle: "Quantifiable results that demonstrate our specialized approach",
+      subtitle: "Quantifiable results that demonstrate our specialised approach",
       stat1: {
         number: "3 Weeks",
         description: "Average time-to-hire"
@@ -552,7 +552,7 @@ const Home = () => {
     },
     cta: {
       title: "Ready to find your next\nlife sciences talent?",
-      subtitle: "Connect with our specialized recruitment team today and discover how we can accelerate your hiring process with qualified, pre-screened candidates."
+      subtitle: "Connect with our specialised recruitment team today and discover how we can accelerate your hiring process with qualified, pre-screened candidates."
     },
     testimonials: {
       title: "What our clients say",
@@ -575,7 +575,7 @@ const Home = () => {
         },
         {
           id: 3,
-          quote: "JCR's specialized approach to bioinformatics recruitment is unmatched. They placed three senior data scientists with us last year, all of whom have exceeded our expectations and are still with the company.",
+          quote: "JCR's specialised approach to bioinformatics recruitment is unmatched. They placed three senior data scientists with us last year, all of whom have exceeded our expectations and are still with the company.",
           author: "Elena Rodriguez",
           position: "Chief Scientific Officer",
           company: "Debiopharm",
@@ -1216,7 +1216,7 @@ const Home = () => {
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-xl font-light text-white mb-8">
-              Trusted by leading life-sciences organizations
+              Trusted by leading life-sciences organisations
             </h2>
           </div>
 
@@ -1443,15 +1443,15 @@ const Home = () => {
       <ParallaxUSPSection />
 
       {/* Testimonials Section */}
-      <section className="bg-brand-blue py-20 opacity-0" data-animate>
+      <section className="bg-white py-20 opacity-0" data-animate>
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className="text-xl md:text-2xl font-light text-white leading-relaxed">
+            <h2 className="text-xl md:text-2xl font-bold text-brand-blue leading-relaxed">
               <EditableText
                 value={pageContent.testimonials.title}
                 onChange={(value) => updateContent('testimonials.title', value)}
                 placeholder="Enter testimonials title..."
-                className="text-xl md:text-2xl font-light text-white leading-relaxed text-center block w-full"
+                className="text-xl md:text-2xl font-bold text-brand-blue leading-relaxed text-center block w-full"
               />
             </h2>
           </div>
@@ -1489,11 +1489,11 @@ const Home = () => {
               </div>
               
               <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-white">
-                Streamlined recruitment for specialized roles
+                Recruitment Built for Life Sciences Excellence
               </h2>
-              
+                  
               <p className="text-gray-300 text-lg mb-12 leading-relaxed">
-                Our proven methodology combines deep industry expertise with cutting-edge recruitment technology to deliver exceptional candidates who drive innovation in life sciences and biometrics.
+                We combine industry expertise with a people-first approach to connect biotech and pharma companies with top talent in biometrics, data science, and clinical data management.
               </p>
 
               {/* Subheadings Grid */}
@@ -1501,14 +1501,14 @@ const Home = () => {
                 <div>
                   <h3 className="text-xl font-medium mb-4 text-white">Expert Screening</h3>
                   <p className="text-gray-300 leading-relaxed">
-                    Every candidate undergoes rigorous technical and regulatory compliance assessment by our team of life sciences professionals.
+                  Each candidate is thoroughly evaluated for technical accuracy, regulatory compliance, and domain expertise before reaching you.
                   </p>
                 </div>
                 
                 <div>
                   <h3 className="text-xl font-medium mb-4 text-white">Cultural Fit</h3>
                   <p className="text-gray-300 leading-relaxed">
-                    We ensure candidates align with your organization's values and working style for long-term success and retention.
+                  We match candidates who align with your values and working style to support long-term success and retention.
                   </p>
                 </div>
               </div>
@@ -1643,7 +1643,7 @@ const Home = () => {
                   />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">
-                  Specialized recruitment for life sciences data and biometrics professionals across global markets.
+                  Specialised recruitment for life sciences data and biometrics professionals across global markets.
                 </p>
               </div>
 

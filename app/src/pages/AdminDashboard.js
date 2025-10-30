@@ -55,8 +55,8 @@ const SimplePageEdit = ({ pageName, onSave }) => {
     const defaults = {
       home: {
         hero: {
-          title: "Life-sciences data & biometrics recruitment",
-          subtitle: "Specialized talent solutions for biotech and pharmaceutical industries across UK, EU, and US markets."
+          title: "Life Sciences, Biometrics & Data Recruitment Specialists",
+          subtitle: "We help biotech and pharmaceutical companies build world-class teams in biostatistics, clinical data management, and data science, connecting life-sciences professionals with employers across the UK, USA, and Europe."
         },
         specialisms: {
           title: "Our recruitment expertise",
