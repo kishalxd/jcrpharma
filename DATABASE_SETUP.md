@@ -59,14 +59,16 @@ CREATE INDEX idx_hiring_requests_created_at ON hiring_requests(created_at DESC);
 CREATE TABLE public.jobs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
-    company TEXT NOT NULL,
+    company TEXT,
     location TEXT NOT NULL,
     work_mode TEXT NOT NULL CHECK (work_mode IN ('Remote', 'Hybrid', 'Onsite')),
     contract TEXT NOT NULL CHECK (contract IN ('Permanent', 'Contract', 'Interim')),
     salary TEXT,
     specialism TEXT NOT NULL CHECK (specialism IN ('Biostatistics', 'Clinical Data Management', 'Bioinformatics', 'Medical Affairs', 'Regulatory Affairs')),
     seniority TEXT NOT NULL CHECK (seniority IN ('Entry Level', 'Mid Level', 'Senior Level', 'Director Level', 'C-Suite')),
-    description TEXT NOT NULL,
+    brief_description TEXT,
+    full_description TEXT,
+    description TEXT,
     skills TEXT[] DEFAULT '{}',
     featured BOOLEAN DEFAULT FALSE,
     show_company BOOLEAN DEFAULT TRUE,
@@ -199,14 +201,16 @@ ALTER TABLE public.testimonials DISABLE ROW LEVEL SECURITY;
 |--------|------|-------------|-------------|
 | `id` | UUID | Primary key | Auto-generated |
 | `title` | TEXT | Job title | NOT NULL |
-| `company` | TEXT | Company name | NOT NULL |
+| `company` | TEXT | Company name | Optional |
 | `location` | TEXT | Job location | NOT NULL |
 | `work_mode` | TEXT | Work arrangement | NOT NULL, CHECK constraint |
 | `contract` | TEXT | Contract type | NOT NULL, CHECK constraint |
 | `salary` | TEXT | Salary range | Optional |
 | `specialism` | TEXT | Job specialism | NOT NULL, CHECK constraint |
 | `seniority` | TEXT | Seniority level | NOT NULL, CHECK constraint |
-| `description` | TEXT | Job description | NOT NULL |
+| `brief_description` | TEXT | Short summary shown on listing | Optional |
+| `full_description` | TEXT | Full job description (rich text HTML) | Optional |
+| `description` | TEXT | Legacy description (kept for backward compatibility) | Optional |
 | `skills` | TEXT[] | Required skills array | Default: empty array |
 | `featured` | BOOLEAN | Featured job flag | Default: FALSE |
 | `show_company` | BOOLEAN | Show company name flag | Default: TRUE |

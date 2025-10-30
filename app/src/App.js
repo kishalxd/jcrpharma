@@ -23,6 +23,8 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import HiringRequestDetail from './pages/HiringRequestDetail';
 import EmployeeApplicationDetail from './pages/EmployeeApplicationDetail';
+import JobView from './pages/JobView';
+import JobApply from './pages/JobApply';
 
 function App() {
   return (
@@ -157,6 +159,8 @@ function App() {
                       <Route path="/" element={<Home />} />
                       <Route path="/specialisms" element={<Specialisms />} />
                       <Route path="/jobs" element={<Jobs />} />
+                      <Route path="/jobs/view/:id" element={<JobView />} />
+                      <Route path="/jobs/apply/:id" element={<JobApply />} />
                       <Route path="/blogs" element={<Blog />} />
                       <Route path="/blogs/:id" element={<Blog />} />
                       <Route path="/employers" element={<Employers />} />

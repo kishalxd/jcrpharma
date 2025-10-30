@@ -186,7 +186,7 @@ const About = () => {
                     </div>
                   </div>
                   <img 
-                    src="/mission.jpg" 
+                    src="/about_us_our_mission.JPG" 
                     alt="JCR Mission" 
                     className="w-full h-full object-cover relative z-10 opacity-0 transition-opacity duration-500"
                     loading="lazy"

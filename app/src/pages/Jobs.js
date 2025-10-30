@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
 const Jobs = () => {
@@ -19,6 +20,7 @@ const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const popularSearches = [
     'Biostatistician', 'Clinical Data Manager', 'SAS Programmer', 'Bioinformatics',
@@ -523,7 +525,7 @@ const Jobs = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-xl font-semibold text-gray-900 hover:text-brand-blue cursor-pointer">
+                            <h3 onClick={() => navigate(`/jobs/view/${job.id}`)} className="text-xl font-semibold text-gray-900 hover:text-brand-blue cursor-pointer">
                               {job.title}
                             </h3>
                             {job.featured && (
@@ -559,8 +561,11 @@ const Jobs = () => {
                         </div>
                       </div>
 
-                      {/* Job Description */}
-                      <p className="text-gray-600 mb-4 leading-relaxed">{job.description}</p>
+                      {/* Job Description (Rich Text) */}
+                      <div
+                        className="rte text-gray-800 mb-4 leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: job.brief_description || job.description || '' }}
+                      />
 
                       {/* Skills Tags */}
                       <div className="flex flex-wrap gap-2 mb-4">
@@ -586,17 +591,10 @@ const Jobs = () => {
                         </div>
                         
                         <div className="flex items-center gap-3">
-                          <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                          </button>
-                          
-                          <button className="bg-brand-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium text-sm">
+                          <button onClick={() => navigate(`/jobs/apply/${job.id}`)} className="bg-brand-blue hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-300 font-medium text-sm">
                             Apply
                           </button>
-                          
-                          <button className="text-brand-blue hover:text-blue-700 font-medium text-sm transition-colors">
+                          <button onClick={() => navigate(`/jobs/view/${job.id}`)} className="text-brand-blue hover:text-blue-700 font-medium text-sm transition-colors">
                             View details
                           </button>
                         </div>

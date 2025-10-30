@@ -959,16 +959,12 @@ const Home = () => {
             
             {/* Right side - Image (50%) */}
             <div>
-              <div className="bg-slate-700 rounded-lg overflow-hidden shadow-2xl">
-                <div className="aspect-square flex items-center justify-center bg-gradient-to-br from-slate-600 to-slate-700">
-                  <div className="bg-slate-500 bg-opacity-50 rounded-lg p-8">
-                    <div className="w-24 h-24 bg-slate-400 rounded-lg flex items-center justify-center">
-                      <svg className="w-12 h-12 text-slate-600" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                      </svg>
-                    </div>
-                  </div>
-                </div>
+              <div className="rounded-lg overflow-hidden shadow-2xl">
+                <img 
+                  src="/home_hero.JPG" 
+                  alt="Life Sciences Recruitment" 
+                  className="w-full h-full object-cover aspect-square"
+                />
               </div>
             </div>
           </div>
@@ -1339,16 +1335,14 @@ const Home = () => {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-12 max-w-6xl mx-auto items-center">
-            {/* Video Section */}
+            {/* Image Section */}
             <div className="lg:col-span-2 order-2 lg:order-1">
-              <div className="bg-gray-400 rounded-lg overflow-hidden shadow-lg aspect-video flex items-center justify-center">
-                <div className="bg-gray-500 bg-opacity-70 rounded-lg p-6">
-                  <div className="w-16 h-16 bg-gray-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                </div>
+              <div className="rounded-lg overflow-hidden shadow-lg aspect-video">
+                <img 
+                  src="/home_our_impact.JPG" 
+                  alt="Our Impact in Life Sciences Recruitment" 
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
 
@@ -1471,14 +1465,12 @@ const Home = () => {
           <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto items-center">
             {/* Image Section */}
             <div className="order-2 lg:order-1">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg overflow-hidden shadow-lg aspect-[4/3] flex items-center justify-center relative">
-                <div className="bg-white/30 backdrop-blur-md rounded-lg p-8 absolute bottom-8 left-8 right-8">
-                  <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center">
-                    <svg className="w-8 h-8 text-brand-blue" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z"/>
-                    </svg>
-                  </div>
-                </div>
+              <div className="rounded-lg overflow-hidden shadow-lg aspect-[4/3] relative">
+                <img 
+                  src="/home_our_process.JPG" 
+                  alt="Our Recruitment Process" 
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
 
@@ -1633,13 +1625,9 @@ const Home = () => {
               <div className="lg:col-span-1">
                 <div className="mb-8">
                   <img 
-                    src="jcr_white_transparent.png" 
+                    src="/logo_transparent.JPG" 
                     alt="JCR Pharma" 
-                    className="h-12 w-auto object-cover"
-                    style={{
-                      clipPath: 'inset(20% 0 20% 0)',
-                      transform: 'scaleY(1.67)'
-                    }}
+                    className="h-12 w-auto object-contain"
                   />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">

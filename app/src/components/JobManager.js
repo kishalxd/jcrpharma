@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import RichTextEditor from './RichTextEditor';
 
 const JobManager = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
+  const [viewingJob, setViewingJob] = useState(null);
+  const [applicants, setApplicants] = useState([]);
+  const [loadingApplicants, setLoadingApplicants] = useState(false);
+  const [applicantsCountByJobId, setApplicantsCountByJobId] = useState({});
+  const [selectedApplicant, setSelectedApplicant] = useState(null);
+  const [downloadingCvId, setDownloadingCvId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('created_at');
@@ -20,7 +27,8 @@ const JobManager = () => {
     salary: '',
     specialism: 'Biostatistics',
     seniority: 'Mid Level',
-    description: '',
+    brief_description: '',
+    full_description: '',
     skills: [],
     featured: false,
     show_company: true,
@@ -48,6 +56,25 @@ const JobManager = () => {
 
       if (error) throw error;
       setJobs(data || []);
+      // Fetch applicants count per job
+      if (data && data.length > 0) {
+        const countsEntries = await Promise.all(
+          data.map(async (job) => {
+            const { count, error: countError } = await supabase
+              .from('job_applications')
+              .select('*', { count: 'exact', head: true })
+              .eq('job_id', job.id);
+            if (countError) {
+              return [job.id, 0];
+            }
+            return [job.id, count || 0];
+          })
+        );
+        const map = Object.fromEntries(countsEntries);
+        setApplicantsCountByJobId(map);
+      } else {
+        setApplicantsCountByJobId({});
+      }
     } catch (error) {
       console.error('Error fetching jobs:', error);
     } finally {
@@ -113,7 +140,8 @@ const JobManager = () => {
         salary: '',
         specialism: 'Biostatistics',
         seniority: 'Mid Level',
-        description: '',
+        brief_description: '',
+        full_description: '',
         skills: [],
         featured: false,
         show_company: true,
@@ -139,7 +167,8 @@ const JobManager = () => {
       salary: job.salary || '',
       specialism: job.specialism || 'Biostatistics',
       seniority: job.seniority || 'Mid Level',
-      description: job.description || '',
+      brief_description: job.brief_description || '',
+      full_description: job.full_description || job.description || '',
       skills: job.skills || [],
       featured: job.featured || false,
       show_company: job.show_company !== false, // Default to true if not set
@@ -182,6 +211,47 @@ const JobManager = () => {
     } catch (error) {
       console.error('Error updating job status:', error);
       alert('Error updating job status: ' + error.message);
+    }
+  };
+
+  const fetchApplicantsForJob = async (jobId) => {
+    setLoadingApplicants(true);
+    try {
+      const { data, error } = await supabase
+        .from('job_applications')
+        .select('*')
+        .eq('job_id', jobId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setApplicants(data || []);
+    } catch (err) {
+      console.error('Error fetching applicants:', err);
+      setApplicants([]);
+    } finally {
+      setLoadingApplicants(false);
+    }
+  };
+
+  const downloadCV = async (cvFileUrl, cvFileName, applicantId) => {
+    try {
+      setDownloadingCvId(applicantId || null);
+      const { data, error } = await supabase.storage
+        .from('cv-files')
+        .download(cvFileUrl);
+      if (error) throw error;
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = cvFileName || 'cv.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading CV:', error);
+      alert('Error downloading CV file');
+    } finally {
+      setDownloadingCvId(null);
     }
   };
 
@@ -256,7 +326,8 @@ const JobManager = () => {
                   salary: '',
                   specialism: 'Biostatistics',
                   seniority: 'Mid Level',
-                  description: '',
+                  brief_description: '',
+                  full_description: '',
                   skills: [],
         featured: false,
         show_company: true,
@@ -293,7 +364,7 @@ const JobManager = () => {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700">Company *</label>
+                  <label className="block text-sm font-medium text-gray-700">Company</label>
                   <div className="flex items-center">
                     <input
                       type="checkbox"
@@ -310,7 +381,6 @@ const JobManager = () => {
                   name="company"
                   value={formData.company}
                   onChange={handleInputChange}
-                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
                 />
               </div>
@@ -420,17 +490,26 @@ const JobManager = () => {
             </div>
           </div>
 
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Job Description *</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              required
-              rows="4"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
-            />
+          {/* Descriptions */}
+          <div className="grid grid-cols-1 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Brief Description</label>
+              <textarea
+                name="brief_description"
+                value={formData.brief_description}
+                onChange={handleInputChange}
+                rows="3"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-blue focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Full Description (Rich Text)</label>
+              <RichTextEditor
+                value={formData.full_description}
+                onChange={(html) => setFormData(prev => ({ ...prev, full_description: html }))}
+                placeholder="Write the full job description..."
+              />
+            </div>
           </div>
 
           {/* Skills */}
@@ -482,7 +561,8 @@ const JobManager = () => {
                   salary: '',
                   specialism: 'Biostatistics',
                   seniority: 'Mid Level',
-                  description: '',
+                  brief_description: '',
+                  full_description: '',
                   skills: [],
         featured: false,
         show_company: true,
@@ -583,6 +663,7 @@ const JobManager = () => {
               <th className="text-left py-4 px-6 text-black font-medium text-sm">Company</th>
                   <th className="text-left py-4 px-6 text-black font-medium text-sm">Location</th>
                   <th className="text-left py-4 px-6 text-black font-medium text-sm">Work Mode</th>
+                  <th className="text-left py-4 px-6 text-black font-medium text-sm">Applicants</th>
                   <th className="text-left py-4 px-6 text-black font-medium text-sm">Status</th>
                   <th className="text-left py-4 px-6 text-black font-medium text-sm">Featured</th>
                   <th className="text-left py-4 px-6 text-black font-medium text-sm">Created</th>
@@ -608,6 +689,17 @@ const JobManager = () => {
                   <td className="py-4 px-6 text-gray-600 text-sm">{job.company}</td>
                   <td className="py-4 px-6 text-gray-600 text-sm">{job.location}</td>
                   <td className="py-4 px-6 text-gray-600 text-sm">{job.work_mode}</td>
+                <td className="py-4 px-6 text-gray-600 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>{applicantsCountByJobId[job.id] ?? 0}</span>
+                    <button
+                      onClick={() => { setViewingJob(job); fetchApplicantsForJob(job.id); }}
+                      className="text-brand-blue hover:text-blue-700 text-sm font-medium"
+                    >
+                      View
+                    </button>
+                  </div>
+                </td>
                   <td className="py-4 px-6">
                     <span className={`text-xs px-3 py-1 rounded-full border font-medium ${getStatusColor(job.status)}`}>
                       {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
@@ -660,6 +752,119 @@ const JobManager = () => {
           </tbody>
         </table>
       </div>
+      {/* Applicants Modal */}
+      {viewingJob && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Applicants</h3>
+                <p className="text-sm text-gray-600">{viewingJob.title}</p>
+              </div>
+              <button onClick={() => { setViewingJob(null); setApplicants([]); }} className="text-gray-600 hover:text-gray-900">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6">
+              {loadingApplicants ? (
+                <div className="text-center py-10">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-blue mx-auto mb-3"></div>
+                  <p className="text-gray-600">Loading applicants...</p>
+                </div>
+              ) : applicants.length === 0 ? (
+                <div className="text-center text-gray-600 py-10">No applicants yet.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="text-left py-3 px-4 text-gray-900 text-sm font-medium">Name</th>
+                        <th className="text-left py-3 px-4 text-gray-900 text-sm font-medium">Email</th>
+                        <th className="text-left py-3 px-4 text-gray-900 text-sm font-medium">Location</th>
+                        <th className="text-left py-3 px-4 text-gray-900 text-sm font-medium">Experience</th>
+                        <th className="text-left py-3 px-4 text-gray-900 text-sm font-medium">Cover Letter</th>
+                        <th className="text-left py-3 px-4 text-gray-900 text-sm font-medium">CV</th>
+                        <th className="text-left py-3 px-4 text-gray-900 text-sm font-medium">Applied</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {applicants.map((a) => (
+                        <tr key={a.id} className="border-t border-gray-100">
+                          <td className="py-3 px-4 text-gray-900 text-sm">{a.full_name}</td>
+                          <td className="py-3 px-4 text-gray-700 text-sm">{a.email}</td>
+                          <td className="py-3 px-4 text-gray-700 text-sm">{a.location || '-'}</td>
+                          <td className="py-3 px-4 text-gray-700 text-sm">{a.experience_level || '-'}</td>
+                          <td className="py-3 px-4">
+                            {a.cover_letter ? (
+                              <button onClick={() => setSelectedApplicant(a)} className="text-brand-blue hover:text-blue-700 text-sm font-medium">
+                                View
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-sm">-</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            {a.cv_file_url ? (
+                              <button
+                                onClick={() => downloadCV(a.cv_file_url, a.cv_file_name, a.id)}
+                                disabled={downloadingCvId === a.id}
+                                className={`text-sm font-medium flex items-center gap-2 ${downloadingCvId === a.id ? 'text-gray-400 cursor-not-allowed' : 'text-brand-blue hover:text-blue-700'}`}
+                              >
+                                {downloadingCvId === a.id ? (
+                                  <>
+                                    <svg className="animate-spin h-4 w-4 text-gray-400" viewBox="0 0 24 24">
+                                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                                    </svg>
+                                    <span>Downloading...</span>
+                                  </>
+                                ) : (
+                                  <span>Download CV</span>
+                                )}
+                              </button>
+                            ) : (
+                              <span className="text-gray-400 text-sm">No CV</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-gray-700 text-sm">{new Date(a.created_at).toLocaleDateString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 text-right">
+              <button onClick={() => { setViewingJob(null); setApplicants([]); }} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cover Letter Modal */}
+      {selectedApplicant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Cover Letter</h3>
+                <p className="text-sm text-gray-600">{selectedApplicant.full_name}</p>
+              </div>
+              <button onClick={() => setSelectedApplicant(null)} className="text-gray-600 hover:text-gray-900">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="whitespace-pre-wrap text-gray-800 leading-relaxed text-sm">
+                {selectedApplicant.cover_letter}
+              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-gray-200 text-right">
+              <button onClick={() => setSelectedApplicant(null)} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
