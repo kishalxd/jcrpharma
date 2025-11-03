@@ -40,6 +40,23 @@ const AnimatedCounter = ({ targetValue, className = "" }) => {
   const [hasAnimated, setHasAnimated] = useState(false);
   const countRef = useRef(null);
 
+  // Extract numeric value and suffix from targetValue string
+  const parseValue = (value) => {
+    if (!value || typeof value !== 'string') {
+      value = String(value || '0');
+    }
+    
+    // Extract number and any suffix (e.g., "3 Weeks" -> { number: 3, suffix: " Weeks" })
+    const match = value.match(/^([\d.]+)(.*)$/);
+    if (match) {
+      return {
+        number: parseFloat(match[1]),
+        suffix: match[2] || ''
+      };
+    }
+    return { number: 0, suffix: '' };
+  };
+
   useEffect(() => {
     if (hasAnimated) return;
 
@@ -55,8 +72,12 @@ const AnimatedCounter = ({ targetValue, className = "" }) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting && !hasAnimated) {
           setHasAnimated(true);
-          const target = parseFloat(targetValue);
-          if (isNaN(target)) return;
+          const { number: target } = parseValue(targetValue);
+          
+          if (isNaN(target) || target === 0) {
+            setCount(0);
+            return;
+          }
 
           const duration = 2000; // 2 seconds
           const steps = 60;
@@ -82,17 +103,15 @@ const AnimatedCounter = ({ targetValue, className = "" }) => {
       if (currentRef) observer.unobserve(currentRef);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasAnimated]);
+  }, [hasAnimated, targetValue]);
 
-  // Display format based on target value
+  // Display format preserving the original suffix
   const displayValue = () => {
-    if (targetValue.includes('%')) {
-      return `${Math.floor(count)}%`;
-    } else if (targetValue.includes('+')) {
-      return `${Math.floor(count)}+`;
-    } else {
-      return Math.floor(count).toString();
-    }
+    const { suffix } = parseValue(targetValue);
+    const numValue = Math.floor(count);
+    
+    // Return the number with the preserved suffix
+    return `${numValue}${suffix}`;
   };
 
   return <span ref={countRef} className={className}>{displayValue()}</span>;
@@ -409,25 +428,16 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
 
         {/* Author Info */}
         <div className="flex flex-col items-center">
-          {/* Avatar */}
-          <div className="w-16 h-16 bg-white rounded-full mb-4 flex items-center justify-center overflow-hidden">
-            {currentTestimonial.image_url ? (
+          {/* Avatar - only show if image_url exists */}
+          {currentTestimonial.image_url && (
+            <div className="w-16 h-16 bg-white rounded-full mb-4 flex items-center justify-center overflow-hidden">
               <img 
                 src={currentTestimonial.image_url} 
                 alt={currentTestimonial.author}
                 className="w-full h-full object-cover"
               />
-            ) : (
-              <span className="text-brand-blue font-semibold text-lg">
-                <EditableTestimonialText
-                  value={currentTestimonial.avatar}
-                  onChange={(value) => updateTestimonial(currentTestimonial.id, 'avatar', value)}
-                  placeholder="Avatar..."
-                  className="text-brand-blue font-semibold text-lg text-center"
-                />
-              </span>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Name and Position */}
           <h4 className="text-lg font-medium text-brand-blue mb-1">
@@ -554,6 +564,19 @@ const Home = () => {
       title: "Ready to find your next\nlife sciences talent?",
       subtitle: "Connect with our specialised recruitment team today and discover how we can accelerate your hiring process with qualified, pre-screened candidates."
     },
+    process: {
+      label: "Our Process",
+      title: "Recruitment Built for Life Sciences Excellence",
+      description: "We combine industry expertise with a people-first approach to connect biotech and pharma companies with top talent in biometrics, data science, and clinical data management.",
+      expertScreening: {
+        title: "Expert Screening",
+        description: "Each candidate is thoroughly evaluated for technical accuracy, regulatory compliance, and domain expertise before reaching you."
+      },
+      culturalFit: {
+        title: "Cultural Fit",
+        description: "We match candidates who align with your values and working style to support long-term success and retention."
+      }
+    },
     testimonials: {
       title: "What our clients say",
       items: [
@@ -606,7 +629,7 @@ const Home = () => {
       const { data, error } = await supabase
         .from('page_contents')
         .select('content')
-        .eq('pageName', 'home')
+        .eq('page_name', 'home')
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -682,10 +705,10 @@ const Home = () => {
         id: testimonial.id,
         quote: testimonial.text,
         author: testimonial.name,
-        position: '', // We don't have position in the database
-        company: '', // We don't have company in the database
+        position: testimonial.position || '',
+        company: testimonial.company || '',
         avatar: testimonial.name.split(' ').map(n => n[0]).join('').toUpperCase(), // Generate initials
-        image_url: testimonial.image_url // Add image URL for display
+        image_url: testimonial.image_url || null // Add image URL for display
       }));
 
       setTestimonials(transformedTestimonials);
@@ -773,9 +796,11 @@ const Home = () => {
       const { error } = await supabase
         .from('page_contents')
         .upsert({
-          pageName: 'home',
+          page_name: 'home',
           content: content,
-          updatedAt: new Date().toISOString()
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'page_name'
         })
         .select();
 
@@ -1198,7 +1223,7 @@ const Home = () => {
           {/* View All Jobs Button */}
           <div className="text-center">
             <button 
-              onClick={() => navigate('/find-jobs')}
+              onClick={() => navigate('/jobs')}
               className="bg-brand-blue/90 hover:bg-brand-blue/80 text-white px-8 py-3 rounded-full transition-all duration-300 backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.2)] font-medium"
             >
               View all jobs
@@ -1217,8 +1242,8 @@ const Home = () => {
           </div>
 
           {/* Logo Carousel */}
-          <div className="flex items-center justify-center overflow-hidden">
-            <div className="flex items-center animate-scroll">
+          <div className="flex items-center justify-center overflow-hidden relative w-full">
+            <div className="flex items-center animate-scroll whitespace-nowrap" style={{ width: 'fit-content' }}>
               {/* BioNTech Logo */}
               <div className="flex items-center justify-center h-12 mx-4 md:mx-6 lg:mx-8 flex-shrink-0">
                 <img 
@@ -1477,30 +1502,72 @@ const Home = () => {
             {/* Content Section */}
             <div className="order-1 lg:order-2">
               <div className="mb-4">
-                <span className="text-gray-300 text-sm uppercase tracking-wide">Our Process</span>
+                <span className="text-gray-300 text-sm uppercase tracking-wide">
+                  {pageContent.process?.label || "Our Process"}
+                </span>
               </div>
               
               <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-white">
-                Recruitment Built for Life Sciences Excellence
+                <EditableText
+                  value={pageContent.process?.title || ""}
+                  onChange={(value) => updateContent('process.title', value)}
+                  placeholder="Enter process title..."
+                  className="text-4xl md:text-5xl font-light leading-tight text-white block w-full"
+                />
               </h2>
                   
               <p className="text-gray-300 text-lg mb-12 leading-relaxed">
-                We combine industry expertise with a people-first approach to connect biotech and pharma companies with top talent in biometrics, data science, and clinical data management.
+                <EditableText
+                  value={pageContent.process?.description || ""}
+                  onChange={(value) => updateContent('process.description', value)}
+                  multiline={true}
+                  rows={3}
+                  placeholder="Enter process description..."
+                  className="text-gray-300 text-lg leading-relaxed block w-full"
+                />
               </p>
 
               {/* Subheadings Grid */}
               <div className="grid md:grid-cols-2 gap-8 mb-12">
                 <div>
-                  <h3 className="text-xl font-medium mb-4 text-white">Expert Screening</h3>
+                  <h3 className="text-xl font-medium mb-4 text-white">
+                    <EditableText
+                      value={pageContent.process?.expertScreening?.title || ""}
+                      onChange={(value) => updateContent('process.expertScreening.title', value)}
+                      placeholder="Expert Screening title..."
+                      className="text-xl font-medium text-white block w-full"
+                    />
+                  </h3>
                   <p className="text-gray-300 leading-relaxed">
-                  Each candidate is thoroughly evaluated for technical accuracy, regulatory compliance, and domain expertise before reaching you.
+                    <EditableText
+                      value={pageContent.process?.expertScreening?.description || ""}
+                      onChange={(value) => updateContent('process.expertScreening.description', value)}
+                      multiline={true}
+                      rows={3}
+                      placeholder="Expert Screening description..."
+                      className="text-gray-300 leading-relaxed block w-full"
+                    />
                   </p>
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-medium mb-4 text-white">Cultural Fit</h3>
+                  <h3 className="text-xl font-medium mb-4 text-white">
+                    <EditableText
+                      value={pageContent.process?.culturalFit?.title || ""}
+                      onChange={(value) => updateContent('process.culturalFit.title', value)}
+                      placeholder="Cultural Fit title..."
+                      className="text-xl font-medium text-white block w-full"
+                    />
+                  </h3>
                   <p className="text-gray-300 leading-relaxed">
-                  We match candidates who align with your values and working style to support long-term success and retention.
+                    <EditableText
+                      value={pageContent.process?.culturalFit?.description || ""}
+                      onChange={(value) => updateContent('process.culturalFit.description', value)}
+                      multiline={true}
+                      rows={3}
+                      placeholder="Cultural Fit description..."
+                      className="text-gray-300 leading-relaxed block w-full"
+                    />
                   </p>
                 </div>
               </div>
@@ -1641,7 +1708,6 @@ const Home = () => {
                 <ul className="space-y-4">
                   <li><a href="/employers" className="text-gray-300 hover:text-white transition-colors text-sm">Post a Job</a></li>
                   <li><a href="/specialisms" className="text-gray-300 hover:text-white transition-colors text-sm">Specialisms</a></li>
-                  <li><a href="/employers#pricing" className="text-gray-300 hover:text-white transition-colors text-sm">Pricing</a></li>
                   <li><a href="/about" className="text-gray-300 hover:text-white transition-colors text-sm">About Us</a></li>
                   <li><a href="/contact" className="text-gray-300 hover:text-white transition-colors text-sm">Contact</a></li>
                 </ul>

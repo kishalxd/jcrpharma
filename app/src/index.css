@@ -17,6 +17,24 @@
       transform: translateY(0);
     }
   }
+
+  .animate-scroll {
+    animation: scroll 30s linear infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    perspective: 1000px;
+    -webkit-perspective: 1000px;
+  }
+
+  @keyframes scroll {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    100% {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
 }
 
 /* Minimal rich text styles without typography plugin */

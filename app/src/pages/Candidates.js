@@ -34,7 +34,7 @@ const useScrollAnimation = () => {
 };
 
 // Parallax Timeline Section Component
-const ParallaxTimelineSection = ({ timeline }) => {
+const ParallaxTimelineSection = ({ timeline, pageContent }) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const sectionRef = useRef(null);
   const headerRef = useRef(null);
@@ -121,10 +121,10 @@ const ParallaxTimelineSection = ({ timeline }) => {
         <div ref={headerRef} className="text-center transition-all duration-200" style={{ opacity: 0 }}>
           <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our Process</p>
           <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-            How It Works
+            {pageContent.process.title}
           </h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-            Our comprehensive 9-step recruitment process ensures you find the perfect role with full support
+            {pageContent.process.subtitle}
           </p>
         </div>
 
@@ -216,11 +216,17 @@ const Candidates = () => {
   const [expandedFaq, setExpandedFaq] = useState(null);
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
+  const [content, setContent] = useState(null);
   
   // Newsletter subscription state
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterMessage, setNewsletterMessage] = useState('');
+  
+  // Download guide state
+  const [showDownloadForm, setShowDownloadForm] = useState(false);
+  const [downloadEmail, setDownloadEmail] = useState('');
+  const [downloadingGuide, setDownloadingGuide] = useState(false);
 
   const fetchFeaturedJobs = async () => {
     setJobsLoading(true);
@@ -354,28 +360,208 @@ const Candidates = () => {
   useScrollAnimation();
 
 
-  const faqs = [
-    {
-      question: 'How does JCR find the right opportunities for me?',
-      answer: 'We use our deep industry knowledge and extensive network to match your skills, experience, and career goals with the best opportunities in biometrics and life sciences.'
+  // Default content (fallback)
+  const defaultContent = {
+    hero: {
+      title: "Your next role in\nbiometrics",
+      subtitle: "Connect with leading pharmaceutical and biotech organisations. Find your perfect role with specialised recruitment experts who understand your field."
     },
-    {
-      question: 'What types of roles do you specialise in?',
-      answer: 'We focus on biostatistics, clinical data management, bioinformatics, statistical programming, and related life sciences roles across pharmaceutical, biotech, and CRO sectors.'
+    process: {
+      title: "How It Works",
+      subtitle: "Our comprehensive 9-step recruitment process ensures you find the perfect role with full support"
     },
-    {
-      question: 'Is there a fee for candidates?',
-      answer: 'No, our services are completely free for candidates. We are paid by our client companies when we successfully place candidates.'
+    opportunities: {
+      title: "Featured opportunities",
+      subtitle: "Discover the latest roles from our partner organisations"
     },
-    {
-      question: 'How long does the placement process typically take?',
-      answer: 'Our average placement time is 14 days, though this can vary depending on role complexity and your specific requirements.'
+    salaryGuide: {
+      title: "Know your worth",
+      subtitle: "Access our comprehensive salary guides for life sciences professionals. Stay informed about market rates across different specialisms and experience levels.",
+      cardTitle: "2025 Life Sciences Salary Guide",
+      cardDescription: "Comprehensive data on salaries across biostatistics, clinical data management, and bioinformatics roles in the UK and EU markets.",
+      filePath: null
     },
-    {
-      question: 'Do you work with candidates at all experience levels?',
-      answer: 'Yes, we work with candidates from entry-level to C-suite positions across all experience levels in our specialised areas.'
+    getStartedCta: {
+      title: "Get started today",
+      subtitle: "Submit your CV and preferences to receive personalised job alerts and opportunities from leading life sciences organisations."
+    },
+    faq: {
+      title: "Frequently asked questions",
+      subtitle: "Common questions from candidates about our recruitment process",
+      items: [
+        {
+          question: "How does JCR find the right opportunities for me?",
+          answer: "We use our deep industry knowledge and extensive network to match your skills, experience, and career goals with the best opportunities in biometrics and life sciences."
+        },
+        {
+          question: "What types of roles do you specialise in?",
+          answer: "We focus on biostatistics, clinical data management, bioinformatics, statistical programming, and related life sciences roles across pharmaceutical, biotech, and CRO sectors."
+        },
+        {
+          question: "Is there a fee for candidates?",
+          answer: "No, our services are completely free for candidates. We are paid by our client companies when we successfully place candidates."
+        },
+        {
+          question: "How long does the placement process typically take?",
+          answer: "Our average placement time is 14 days, though this can vary depending on role complexity and your specific requirements."
+        },
+        {
+          question: "Do you work with candidates at all experience levels?",
+          answer: "Yes, we work with candidates from entry-level to C-suite positions across all experience levels in our specialised areas."
+        }
+      ]
     }
-  ];
+  };
+
+  // Fetch content from database
+  const fetchContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('page_contents')
+        .select('content')
+        .eq('page_name', 'candidates')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching content:', error);
+        setContent(defaultContent);
+      } else if (data) {
+        // Merge with defaults to ensure all fields exist
+        const mergedContent = {
+          ...defaultContent,
+          ...(data.content || {}),
+          hero: { ...defaultContent.hero, ...(data.content?.hero || {}) },
+          process: { ...defaultContent.process, ...(data.content?.process || {}) },
+          opportunities: { ...defaultContent.opportunities, ...(data.content?.opportunities || {}) },
+          salaryGuide: { 
+            ...defaultContent.salaryGuide, 
+            ...(data.content?.salaryGuide || {}),
+            filePath: data.content?.salaryGuide?.filePath || defaultContent.salaryGuide.filePath
+          },
+          getStartedCta: { ...defaultContent.getStartedCta, ...(data.content?.getStartedCta || {}) },
+          faq: { 
+            ...defaultContent.faq, 
+            ...(data.content?.faq || {}),
+            items: data.content?.faq?.items && data.content.faq.items.length > 0 
+              ? data.content.faq.items 
+              : defaultContent.faq.items
+          }
+        };
+        setContent(mergedContent);
+      } else {
+        setContent(defaultContent);
+      }
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      setContent(defaultContent);
+    }
+  };
+
+  useEffect(() => {
+    fetchContent();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pageContent = content || defaultContent;
+
+  // Show download form when button is clicked
+  const handleDownloadGuideClick = () => {
+    setShowDownloadForm(true);
+  };
+
+  // Download salary guide file with email subscription
+  const handleDownloadGuide = async () => {
+    if (!downloadEmail || !downloadEmail.includes('@')) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    setDownloadingGuide(true);
+    try {
+      // Subscribe to newsletter first
+      try {
+        const { error: subscribeError } = await supabase
+          .from('newsletter_subscriptions')
+          .insert([
+            {
+              email: downloadEmail.toLowerCase().trim(),
+              source: 'salary_guide_download'
+            }
+          ])
+          .select();
+
+        if (subscribeError) {
+          // If email already exists, that's okay - proceed with download
+          if (subscribeError.code !== '23505') {
+            throw subscribeError;
+          }
+        }
+      } catch (subscribeError) {
+        console.log('Subscription note:', subscribeError);
+        // Continue with download even if subscription fails
+      }
+
+      // Subscription successful (or already subscribed), proceed with download
+      let filePath = pageContent.salaryGuide?.filePath;
+      let fileToDownload = null;
+
+      // If file path exists in content, try that first
+      if (filePath) {
+        const { data, error } = await supabase.storage
+          .from('cv-files')
+          .download(filePath);
+
+        if (!error && data) {
+          fileToDownload = { data, name: filePath };
+        }
+      }
+
+      // If not found, search for any employee_doc file
+      if (!fileToDownload) {
+        const { data: allFiles } = await supabase.storage
+          .from('cv-files')
+          .list('');
+
+        if (allFiles) {
+          const employeeDocFile = allFiles.find(f => f.name.startsWith('employee_doc'));
+          if (employeeDocFile) {
+            const { data, error } = await supabase.storage
+              .from('cv-files')
+              .download(employeeDocFile.name);
+
+            if (!error && data) {
+              fileToDownload = { data, name: employeeDocFile.name };
+            }
+          }
+        }
+      }
+
+      if (fileToDownload) {
+        // Create blob URL and trigger download
+        const url = URL.createObjectURL(fileToDownload.data);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileToDownload.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Reset form after successful download
+        setTimeout(() => {
+          setShowDownloadForm(false);
+          setDownloadEmail('');
+        }, 500);
+      } else {
+        alert('Salary guide file not found. Please contact support.');
+      }
+    } catch (error) {
+      console.error('Error subscribing or downloading:', error);
+      alert('Something went wrong. Please try again later.');
+    } finally {
+      setDownloadingGuide(false);
+    }
+  };
 
   const toggleFaq = (index) => {
     setExpandedFaq(expandedFaq === index ? null : index);
@@ -500,11 +686,15 @@ const Candidates = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-5xl md:text-6xl font-light mb-8 leading-tight">
-              Your next role in<br />biometrics
+              {pageContent.hero.title.split('\n').map((line, index) => (
+                <React.Fragment key={index}>
+                  {line}
+                  {index < pageContent.hero.title.split('\n').length - 1 && <br />}
+                </React.Fragment>
+              ))}
             </h1>
             <p className="text-gray-300 text-xl mb-12 max-w-3xl mx-auto leading-relaxed">
-              Connect with leading pharmaceutical and biotech organisations. 
-              Find your perfect role with specialised recruitment experts who understand your field.
+              {pageContent.hero.subtitle}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -526,17 +716,17 @@ const Candidates = () => {
       </section>
 
       {/* How It Works Section - Parallax Timeline */}
-      <ParallaxTimelineSection timeline={timeline} />
+      <ParallaxTimelineSection timeline={timeline} pageContent={pageContent} />
 
       {/* Featured Jobs Section */}
       <section className="bg-gray-50 py-20">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Featured opportunities
+              {pageContent.opportunities.title}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Discover the latest roles from our partner organisations
+              {pageContent.opportunities.subtitle}
             </p>
           </div>
 
@@ -658,11 +848,10 @@ const Candidates = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Know your worth
+              {pageContent.salaryGuide.title}
             </h2>
             <p className="text-gray-600 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Access our comprehensive salary guides for life sciences professionals. 
-              Stay informed about market rates across different specialisms and experience levels.
+              {pageContent.salaryGuide.subtitle}
             </p>
             
             <div className="bg-gradient-to-br from-brand-blue to-blue-700 text-white rounded-lg p-8 mb-8">
@@ -671,14 +860,59 @@ const Candidates = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 00-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-medium mb-4">2025 Life Sciences Salary Guide</h3>
+              <h3 className="text-2xl font-medium mb-4">{pageContent.salaryGuide.cardTitle}</h3>
               <p className="text-blue-100 mb-6">
-                Comprehensive data on salaries across biostatistics, clinical data management, 
-                and bioinformatics roles in the UK and EU markets.
+                {pageContent.salaryGuide.cardDescription}
               </p>
-              <button className="bg-white text-brand-blue hover:bg-gray-100 px-6 py-3 rounded-full transition-all duration-300 font-medium">
-                Download Free Guide
-              </button>
+              
+              {/* Download Button or Email Form */}
+              <div className="flex items-center justify-center min-h-[48px] relative">
+                <div className={`w-full max-w-md mx-auto transition-all duration-500 ease-in-out ${
+                  !showDownloadForm 
+                    ? 'opacity-100 transform translate-y-0 scale-100' 
+                    : 'opacity-0 transform translate-y-2 scale-95 absolute pointer-events-none'
+                }`}>
+                  <button 
+                    onClick={handleDownloadGuideClick}
+                    className="bg-white text-brand-blue hover:bg-gray-100 px-6 py-3 rounded-full transition-all duration-300 font-medium w-full"
+                  >
+                    Download Free Guide
+                  </button>
+                </div>
+                <div className={`flex items-center gap-3 w-full max-w-md mx-auto transition-all duration-500 ease-in-out ${
+                  showDownloadForm 
+                    ? 'opacity-100 transform translate-y-0 scale-100' 
+                    : 'opacity-0 transform translate-y-2 scale-95 absolute pointer-events-none'
+                }`}>
+                  <input
+                    type="email"
+                    value={downloadEmail}
+                    onChange={(e) => setDownloadEmail(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && downloadEmail && downloadEmail.includes('@')) {
+                        handleDownloadGuide();
+                      }
+                    }}
+                    placeholder="Enter your email"
+                    disabled={downloadingGuide}
+                    className="flex-1 px-4 py-3 rounded-full border-2 border-white/30 bg-white/10 backdrop-blur-sm text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    autoFocus
+                  />
+                  <button 
+                    onClick={handleDownloadGuide}
+                    disabled={downloadingGuide || !downloadEmail || !downloadEmail.includes('@')}
+                    className="bg-white text-brand-blue hover:bg-gray-100 disabled:bg-gray-300 disabled:cursor-not-allowed p-3 rounded-full font-medium flex items-center justify-center min-w-[48px] min-h-[48px] transition-all"
+                  >
+                    {downloadingGuide ? (
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-brand-blue border-t-transparent"></div>
+                    ) : (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -689,10 +923,10 @@ const Candidates = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Get started today
+              {pageContent.getStartedCta.title}
             </h2>
             <p className="text-gray-600 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Submit your CV and preferences to receive personalised job alerts and opportunities from leading life sciences organisations.
+              {pageContent.getStartedCta.subtitle}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -720,15 +954,15 @@ const Candidates = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-                Frequently asked questions
+                {pageContent.faq.title}
               </h2>
               <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-                Common questions from candidates about our recruitment process
+                {pageContent.faq.subtitle}
               </p>
             </div>
 
             <div className="space-y-4">
-              {faqs.map((faq, index) => (
+              {(pageContent.faq.items || []).map((faq, index) => (
                 <div key={index} className="bg-white rounded-lg shadow-sm opacity-0" data-animate-delay={index * 100}>
                   <button
                     onClick={() => toggleFaq(index)}
@@ -829,7 +1063,6 @@ const Candidates = () => {
                 <ul className="space-y-4">
                   <li><a href="/employers" className="text-gray-300 hover:text-white transition-colors text-sm">Post a Job</a></li>
                   <li><a href="/specialisms" className="text-gray-300 hover:text-white transition-colors text-sm">Specialisms</a></li>
-                  <li><a href="/employers#pricing" className="text-gray-300 hover:text-white transition-colors text-sm">Pricing</a></li>
                   <li><a href="/about" className="text-gray-300 hover:text-white transition-colors text-sm">About Us</a></li>
                   <li><a href="/contact" className="text-gray-300 hover:text-white transition-colors text-sm">Contact</a></li>
                 </ul>

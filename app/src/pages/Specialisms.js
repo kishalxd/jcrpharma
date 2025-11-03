@@ -1,9 +1,49 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useAdmin } from '../components/AdminContext';
+
+// EditableText Component for inline editing
+const EditableText = ({ value, onChange, multiline = false, placeholder, className = "", rows = 1, editMode = false, variant = 'dark' }) => {
+  if (!editMode) {
+    return (
+      <span className={className}>
+        {multiline && value ? value.split('\n').map((line, index) => (
+          <React.Fragment key={index}>
+            {line}
+            {index < value.split('\n').length - 1 && <br />}
+          </React.Fragment>
+        )) : value}
+      </span>
+    );
+  }
+
+  const Component = multiline ? 'textarea' : 'input';
+  
+  // Determine styling based on variant (dark = white text on dark bg, light = dark text on light bg)
+  const inputStyles = variant === 'dark' 
+    ? 'bg-white/10 backdrop-blur-sm border-2 border-white/30 focus:border-white focus:bg-white/20 hover:border-white/50 text-white placeholder-gray-300'
+    : 'bg-white border-2 border-gray-300 focus:border-brand-blue focus:bg-white outline-none hover:border-gray-400 text-gray-900 placeholder-gray-500';
+  
+  return (
+    <div className="relative group">
+      <Component
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={multiline ? rows : undefined}
+        className={`${className} ${inputStyles} rounded-lg px-4 py-2 transition-all duration-200 resize-none`}
+        style={editMode ? { minHeight: multiline ? '80px' : '40px' } : {}}
+      />
+      <div className="absolute -top-2 -left-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+      </div>
+    </div>
+  );
+};
 
 // Parallax Timeline Section Component
-const ParallaxTimelineSection = ({ timeline }) => {
+const ParallaxTimelineSection = ({ timeline, editMode, pageContent, updateContent }) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const sectionRef = useRef(null);
   const headerRef = useRef(null);
@@ -90,10 +130,34 @@ const ParallaxTimelineSection = ({ timeline }) => {
         <div ref={headerRef} className="text-center transition-all duration-200" style={{ opacity: 0 }}>
           <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our Process</p>
           <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-            Recruitment process timeline
+            {editMode ? (
+              <EditableText
+                value={pageContent?.process?.title || 'Recruitment process timeline'}
+                onChange={(value) => updateContent('process.title', value)}
+                placeholder="Recruitment process timeline"
+                className="text-4xl md:text-5xl font-light leading-tight text-gray-900 text-center block w-full"
+                editMode={editMode}
+                variant="light"
+              />
+            ) : (
+              pageContent?.process?.title || 'Recruitment process timeline'
+            )}
           </h2>
           <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-            A structured 7-step methodology built on 10+ years of biometric and bioinformatic recruitment expertise
+            {editMode ? (
+              <EditableText
+                value={pageContent?.process?.subtitle || 'A structured 7-step methodology built on 10+ years of biometric and bioinformatic recruitment expertise'}
+                onChange={(value) => updateContent('process.subtitle', value)}
+                placeholder="A structured 7-step methodology..."
+                className="text-gray-600 text-lg text-center block w-full"
+                multiline={true}
+                rows={2}
+                editMode={editMode}
+                variant="light"
+              />
+            ) : (
+              pageContent?.process?.subtitle || 'A structured 7-step methodology built on 10+ years of biometric and bioinformatic recruitment expertise'
+            )}
           </p>
         </div>
 
@@ -183,8 +247,15 @@ const ParallaxTimelineSection = ({ timeline }) => {
 const Specializations = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isAdminAuthenticated } = useAdmin();
   const [activeSpecialism, setActiveSpecialism] = useState('biostatistics');
   const [openFaq, setOpenFaq] = useState(null);
+  
+  // Edit mode state
+  const [editMode, setEditMode] = useState(false);
+  const [content, setContent] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [savedNotification, setSavedNotification] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -240,6 +311,163 @@ const Specializations = () => {
       features: ['Genomic Analysis', 'NGS Data Processing', 'Pipeline Development', 'Machine Learning'],
       roles: ['Bioinformatics Scientist', 'Computational Biologist', 'NGS Analyst', 'Bioinformatics Director']
     }
+  };
+
+  // Default content (fallback)
+  const defaultContent = {
+    hero: {
+      title: "Life Sciences Specialisations",
+      subtitle: "Discover Our Specialised Recruitment Expertise Across Key Areas of Life Sciences, Biotechnology, and Pharmaceutical Research."
+    },
+    capabilities: {
+      title: "Our recruitment expertise",
+      subtitle: "Delivering specialised talent solutions with unmatched reliability, quality, consultative approach, and expert knowledge"
+    },
+    process: {
+      title: "Recruitment process timeline",
+      subtitle: "A structured 7-step methodology built on 10+ years of biometric and bioinformatic recruitment expertise"
+    },
+    faq: {
+      title: "Frequently asked questions",
+      subtitle: "Common questions about our specialised recruitment process and services",
+      items: [
+        {
+          question: "What specializations do you cover in life sciences recruitment?",
+          answer: "We specialize in biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies."
+        },
+        {
+          question: "How long does the typical recruitment process take?",
+          answer: "Our average time-to-hire is 14 days for most positions. However, this can vary depending on the seniority level and specific technical requirements. Senior and director-level positions may take 3-4 weeks."
+        },
+        {
+          question: "Do you work with both permanent and contract positions?",
+          answer: "Yes, we handle both permanent placements and contract assignments. We also offer contract-to-permanent options for clients who want to evaluate candidates before making permanent offers."
+        },
+        {
+          question: "What geographic regions do you cover?",
+          answer: "We operate across the UK, EU, and US markets. Our consultants have deep knowledge of local regulations, salary benchmarks, and market conditions in each region."
+        },
+        {
+          question: "How do you ensure candidate quality and technical competency?",
+          answer: "All candidates undergo rigorous technical screening including skills assessments, portfolio reviews, and reference checks. We verify certifications, experience with specific tools/platforms, and domain expertise."
+        },
+        {
+          question: "What is your fee structure?",
+          answer: "Our fees are competitive and based on successful placements. We offer different pricing models including retained search for senior positions and contingency-based recruitment for mid-level roles. Contact us for a detailed quote."
+        }
+      ]
+    },
+    cta: {
+      title: "Start your recruitment\njourney today",
+      subtitle: "Get in touch with our specialised recruitment team to discuss your hiring needs and learn how we can help you find the perfect candidates."
+    }
+  };
+
+  // Check if we're in edit mode from URL params and if admin is logged in
+  useEffect(() => {
+    const isEdit = searchParams.get('edit') === 'true';
+    if (isEdit) {
+      if (isAdminAuthenticated) {
+        setEditMode(true);
+      } else {
+        navigate('/admin-login?redirect=' + encodeURIComponent('/specialisms?edit=true'));
+        return;
+      }
+    } else {
+      setEditMode(false);
+    }
+  }, [searchParams, isAdminAuthenticated, navigate]);
+
+  // Fetch content from database
+  const fetchContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('page_contents')
+        .select('content')
+        .eq('page_name', 'specialisms')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching content:', error);
+        setContent(defaultContent);
+      } else if (data) {
+        // Merge with defaults to ensure all fields exist
+        const mergedContent = {
+          ...defaultContent,
+          ...(data.content || {}),
+          hero: { ...defaultContent.hero, ...(data.content?.hero || {}) },
+          capabilities: { ...defaultContent.capabilities, ...(data.content?.capabilities || {}) },
+          process: { ...defaultContent.process, ...(data.content?.process || {}) },
+          faq: { 
+            ...defaultContent.faq, 
+            ...(data.content?.faq || {}),
+            items: data.content?.faq?.items && data.content.faq.items.length > 0 
+              ? data.content.faq.items 
+              : defaultContent.faq.items
+          },
+          cta: { ...defaultContent.cta, ...(data.content?.cta || {}) }
+        };
+        setContent(mergedContent);
+      } else {
+        setContent(defaultContent);
+      }
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      setContent(defaultContent);
+    }
+  };
+
+  useEffect(() => {
+    fetchContent();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pageContent = content || defaultContent;
+
+  const updateContent = (path, value) => {
+    setContent(prev => {
+      const newContent = { ...prev };
+      const keys = path.split('.');
+      let current = newContent;
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
+        current = current[keys[i]];
+      }
+      
+      current[keys[keys.length - 1]] = value;
+      return newContent;
+    });
+  };
+
+  const saveContent = async () => {
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('page_contents')
+        .upsert({
+          page_name: 'specialisms',
+          content: content,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'page_name'
+        })
+        .select();
+
+      if (error) throw error;
+      
+      setSavedNotification(true);
+      setTimeout(() => setSavedNotification(false), 3000);
+    } catch (error) {
+      console.error('Error saving content:', error);
+      alert(`Error saving content: ${error.message}`);
+    }
+    setSaving(false);
+  };
+
+  const exitEditMode = () => {
+    navigate('/specialisms');
+    setEditMode(false);
   };
 
   // Handle URL parameters to set the active specialization
@@ -420,15 +648,75 @@ const Specializations = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Edit Mode Header */}
+      {editMode && (
+        <div className="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-sm z-50 px-6 py-4">
+          <div className="max-w-6xl mx-auto flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-white font-medium">Edit Mode</span>
+              <span className="text-gray-300 text-sm">Click on any text to edit</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              {savedNotification && (
+                <span className="text-green-400 text-sm flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Saved!
+                </span>
+              )}
+              <button
+                onClick={saveContent}
+                disabled={saving}
+                className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button
+                onClick={exitEditMode}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Exit Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
-      <section className="bg-brand-blue">
+      <section className={`bg-brand-blue ${editMode ? 'pt-20' : ''}`}>
         <div className="container mx-auto px-6 py-20">
           <div className="text-center text-white">
             <h1 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
-              Life Sciences Specialisations
+              {editMode ? (
+                <EditableText
+                  value={pageContent.hero.title}
+                  onChange={(value) => updateContent('hero.title', value)}
+                  placeholder="Enter hero title..."
+                  className="text-4xl md:text-5xl font-light leading-tight text-white text-center block w-full"
+                  editMode={editMode}
+                  variant="dark"
+                />
+              ) : (
+                pageContent.hero.title
+              )}
             </h1>
             <p className="text-gray-300 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Discover Our Specialised Recruitment Expertise Across Key Areas of Life Sciences, Biotechnology, and Pharmaceutical Research.
+              {editMode ? (
+                <EditableText
+                  value={pageContent.hero.subtitle}
+                  onChange={(value) => updateContent('hero.subtitle', value)}
+                  multiline={true}
+                  rows={2}
+                  placeholder="Enter hero subtitle..."
+                  className="text-gray-300 text-lg leading-relaxed text-center block w-full"
+                  editMode={editMode}
+                  variant="dark"
+                />
+              ) : (
+                pageContent.hero.subtitle
+              )}
             </p>
           </div>
         </div>
@@ -629,10 +917,32 @@ const Specializations = () => {
           <div className="text-center mb-16">
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Core Capabilities</p>
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Our recruitment expertise
+              {editMode ? (
+                <EditableText
+                  value={pageContent.capabilities.title}
+                  onChange={(value) => updateContent('capabilities.title', value)}
+                  placeholder="Enter capabilities title..."
+                  className="text-4xl md:text-5xl font-light leading-tight text-gray-900 text-center block w-full"
+                  editMode={editMode}
+                  variant="light"
+                />
+              ) : (
+                pageContent.capabilities.title
+              )}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Delivering specialised talent solutions with unmatched reliability, quality, consultative approach, and expert knowledge
+              {editMode ? (
+                <EditableText
+                  value={pageContent.capabilities.subtitle}
+                  onChange={(value) => updateContent('capabilities.subtitle', value)}
+                  placeholder="Enter capabilities subtitle..."
+                  className="text-gray-600 text-lg text-center block w-full"
+                  editMode={editMode}
+                  variant="light"
+                />
+              ) : (
+                pageContent.capabilities.subtitle
+              )}
             </p>
           </div>
 
@@ -695,7 +1005,12 @@ const Specializations = () => {
       </section>
 
       {/* Timeline Section - Parallax */}
-      <ParallaxTimelineSection timeline={timeline} />
+      <ParallaxTimelineSection 
+        timeline={timeline} 
+        editMode={editMode}
+        pageContent={pageContent}
+        updateContent={updateContent}
+      />
 
 
       {/* FAQ Section */}
@@ -704,16 +1019,16 @@ const Specializations = () => {
           <div className="text-center mb-16">
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">FAQ</p>
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Frequently asked questions
+              {pageContent.faq?.title || 'Frequently asked questions'}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Common questions about our specialised recruitment process and services
+              {pageContent.faq?.subtitle || 'Common questions about our specialised recruitment process and services'}
             </p>
           </div>
 
           <div className="max-w-3xl mx-auto">
             <div className="space-y-4">
-              {faqs.map((faq, index) => (
+              {(pageContent.faq?.items || faqs).map((faq, index) => (
                 <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200">
                   <button
                     onClick={() => setOpenFaq(openFaq === index ? null : index)}
@@ -746,11 +1061,15 @@ const Specializations = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-white">
-              Start your recruitment<br />
-              journey today
+              {(pageContent.cta?.title || 'Start your recruitment\njourney today').split('\n').map((line, index) => (
+                <React.Fragment key={index}>
+                  {line}
+                  {index < (pageContent.cta?.title || 'Start your recruitment\njourney today').split('\n').length - 1 && <br />}
+                </React.Fragment>
+              ))}
             </h2>
             <p className="text-gray-300 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Get in touch with our specialised recruitment team to discuss your hiring needs and learn how we can help you find the perfect candidates.
+              {pageContent.cta?.subtitle || 'Get in touch with our specialised recruitment team to discuss your hiring needs and learn how we can help you find the perfect candidates.'}
             </p>
             
             {/* Submit Message */}

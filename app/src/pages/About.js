@@ -98,11 +98,128 @@ const AnimatedCounter = ({ targetValue, className = "" }) => {
 
 const About = () => {
   useScrollAnimation();
+  const [content, setContent] = useState(null);
 
   // Newsletter subscription state
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterLoading, setNewsletterLoading] = useState(false);
   const [newsletterMessage, setNewsletterMessage] = useState('');
+
+  // Default content (fallback)
+  const defaultContent = {
+    mission: {
+      title: "Our Mission",
+      paragraph1: "JCR Pharma was founded on a simple belief: recruitment in the life sciences industry can and should be done better. After years of working within agencies that chased numbers instead of people, we set out to build something different. We wanted a consultancy that leads with honesty, transparency, and partnership. Our team specialises in biometrics, biostatistics, and clinical data management recruitment, helping pharmaceutical, biotech, and CRO organisations across the UK and Europe find talent that truly fits. A candidate should not only meet the requirements on paper but also align with a company's culture, purpose, and long-term goals.",
+      paragraph2: "We do not measure success by how many CVs we send. We measure it by the relationships we build and by the impact our candidates make. Every search begins with listening, every conversation with understanding, and every placement with trust. JCR Pharma is more than a business to us. It is a commitment to doing recruitment with integrity, empathy, and genuine care for the science that shapes lives."
+    },
+    team: {
+      title: "Leadership Team",
+      subtitle: "Industry veterans with deep expertise in life-sciences recruitment and talent acquisition",
+      james: {
+        name: "James Carpenter",
+        title: "Managing Director / Founder",
+        bio: "James brings 10 years of recruitment experience, including 5+ years specialised in Biometrics. After graduating from the University of Hertfordshire with a degree in History, he began in graduate and Rec2Rec recruitment before transitioning to life sciences. James built Biometrics desks from scratch across multiple agencies, developing expertise in the European market. A former rugby player who retired to focus on his career, James founded JCR Pharma driven by a vision to transform recruitment through integrity, consultation, and genuine partnership rather than outdated transactional approaches."
+      },
+      mathy: {
+        name: "Mathy Bekele",
+        title: "Principal Consultant",
+        bio: "With five years of specialised recruitment experience in the biometrics space within pharmaceuticals, Mathy began her career at Phaidon International before joining Veramed as an internal recruiter. During her three years at Veramed, she worked directly with statisticians and programmers, making numerous placements across biotech, pharmaceutical, and CRO organisations. Her deep understanding of the industry was further strengthened through attending key conferences like PhUSE in London. Mathy joined JCR in 2024, drawn by the company's people-first ethos and commitment to building long-term relationships. Based in Vienna, Austria, she focuses on providing exceptional service while supporting the biotech and pharmaceutical communities."
+      }
+    },
+    values: {
+      title: "Our Values",
+      subtitle: "Our Recruitment Values in Life-Sciences & Biostatistics",
+      excellence: {
+        title: "Excellence",
+        description: "We uphold the highest standards in biostatistics candidate assessment and life-science client service."
+      },
+      integrity: {
+        title: "Integrity",
+        description: "Transparent, data-driven communication builds long-term trust with our pharma and CRO partners."
+      },
+      expertise: {
+        title: "Expertise",
+        description: "Our recruiters' deep biometrics domain knowledge enables precise technical placements."
+      }
+    },
+    stats: {
+      title: "Our Impact",
+      subtitle: "Measurable results that demonstrate our commitment to excellence",
+      placements: {
+        value: "90+",
+        label: "Successful Placements"
+      },
+      timeToHire: {
+        value: "3",
+        label: "Weeks Average Time-to-Hire"
+      },
+      satisfaction: {
+        value: "95%",
+        label: "Client Satisfaction Rate"
+      },
+      partners: {
+        value: "50+",
+        label: "Partner Organisations"
+      }
+    }
+  };
+
+  // Fetch content from database
+  const fetchContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('page_contents')
+        .select('content')
+        .eq('page_name', 'about')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching content:', error);
+        setContent(defaultContent);
+      } else if (data) {
+        // Merge with defaults to ensure all fields exist
+        const mergedContent = {
+          ...defaultContent,
+          ...(data.content || {}),
+          mission: { ...defaultContent.mission, ...(data.content?.mission || {}) },
+          team: {
+            ...defaultContent.team,
+            ...(data.content?.team || {}),
+            james: { ...defaultContent.team.james, ...(data.content?.team?.james || {}) },
+            mathy: { ...defaultContent.team.mathy, ...(data.content?.team?.mathy || {}) }
+          },
+          values: {
+            ...defaultContent.values,
+            ...(data.content?.values || {}),
+            excellence: { ...defaultContent.values.excellence, ...(data.content?.values?.excellence || {}) },
+            integrity: { ...defaultContent.values.integrity, ...(data.content?.values?.integrity || {}) },
+            expertise: { ...defaultContent.values.expertise, ...(data.content?.values?.expertise || {}) }
+          },
+          stats: {
+            ...defaultContent.stats,
+            ...(data.content?.stats || {}),
+            placements: { ...defaultContent.stats.placements, ...(data.content?.stats?.placements || {}) },
+            timeToHire: { ...defaultContent.stats.timeToHire, ...(data.content?.stats?.timeToHire || {}) },
+            satisfaction: { ...defaultContent.stats.satisfaction, ...(data.content?.stats?.satisfaction || {}) },
+            partners: { ...defaultContent.stats.partners, ...(data.content?.stats?.partners || {}) }
+          }
+        };
+        setContent(mergedContent);
+      } else {
+        setContent(defaultContent);
+      }
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      setContent(defaultContent);
+    }
+  };
+
+  useEffect(() => {
+    fetchContent();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pageContent = content || defaultContent;
 
   // Newsletter subscription handler
   const handleNewsletterSignup = async (e) => {
@@ -161,13 +278,13 @@ const About = () => {
             <div className="grid lg:grid-cols-2 gap-12 items-start">
               <div>
                 <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-                  Our Mission
+                  {pageContent.mission.title}
                 </h2>
                 <p className="text-gray-600 text-lg mb-6 leading-relaxed">
-                JCR Pharma was founded on a simple belief: recruitment in the life sciences industry can and should be done better. After years of working within agencies that chased numbers instead of people, we set out to build something different. We wanted a consultancy that leads with honesty, transparency, and partnership. Our team specialises in biometrics, biostatistics, and clinical data management recruitment, helping pharmaceutical, biotech, and CRO organisations across the UK and Europe find talent that truly fits. A candidate should not only meet the requirements on paper but also align with a company’s culture, purpose, and long-term goals.
+                  {pageContent.mission.paragraph1}
                 </p>
                 <p className="text-gray-600 text-lg leading-relaxed">
-                We do not measure success by how many CVs we send. We measure it by the relationships we build and by the impact our candidates make. Every search begins with listening, every conversation with understanding, and every placement with trust. JCR Pharma is more than a business to us. It is a commitment to doing recruitment with integrity, empathy, and genuine care for the science that shapes lives.
+                  {pageContent.mission.paragraph2}
                 </p>
               </div>
               <div className="order-first lg:order-last lg:pt-16">
@@ -223,10 +340,10 @@ const About = () => {
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Leadership Team
+              {pageContent.team.title}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Industry veterans with deep expertise in life-sciences recruitment and talent acquisition
+              {pageContent.team.subtitle}
             </p>
           </div>
 
@@ -258,20 +375,13 @@ const About = () => {
                   />
                 </div>
                 <h3 className="text-2xl font-medium text-gray-900 mb-2">
-                  James Carpenter
+                  {pageContent.team.james.name}
                 </h3>
                 <p className="text-brand-blue font-medium mb-4">
-                  Managing Director / Founder
+                  {pageContent.team.james.title}
                 </p>
                 <p className="text-gray-600 leading-relaxed mb-6">
-                  James brings 10 years of recruitment experience, including 5+ years specialised 
-                  in Biometrics. After graduating from the University of Hertfordshire with a 
-                  degree in History, he began in graduate and Rec2Rec recruitment before transitioning 
-                  to life sciences. James built Biometrics desks from scratch across multiple agencies, 
-                  developing expertise in the European market. A former rugby player who retired to 
-                  focus on his career, James founded JCR Pharma driven by a vision to transform 
-                  recruitment through integrity, consultation, and genuine partnership rather than 
-                  outdated transactional approaches.
+                  {pageContent.team.james.bio}
                 </p>
                 <div className="flex justify-center space-x-4">
                   <a href="#" className="text-gray-400 hover:text-brand-blue transition-colors">
@@ -315,20 +425,13 @@ const About = () => {
                   />
                 </div>
                 <h3 className="text-2xl font-medium text-gray-900 mb-2">
-                  Mathy Bekele
+                  {pageContent.team.mathy.name}
                 </h3>
                 <p className="text-brand-blue font-medium mb-4">
-                  Principal Consultant
+                  {pageContent.team.mathy.title}
                 </p>
                 <p className="text-gray-600 leading-relaxed mb-6">
-                  With five years of specialised recruitment experience in the biometrics space within pharmaceuticals, 
-                  Mathy began her career at Phaidon International before joining Veramed as an internal recruiter. 
-                  During her three years at Veramed, she worked directly with statisticians and programmers, 
-                  making numerous placements across biotech, pharmaceutical, and CRO organisations. Her deep 
-                  understanding of the industry was further strengthened through attending key conferences like 
-                  PhUSE in London. Mathy joined JCR in 2024, drawn by the company's people-first ethos and 
-                  commitment to building long-term relationships. Based in Vienna, Austria, she focuses on 
-                  providing exceptional service while supporting the biotech and pharmaceutical communities.
+                  {pageContent.team.mathy.bio}
                 </p>
                 <div className="flex justify-center space-x-4">
                   <a href="#" className="text-gray-400 hover:text-brand-blue transition-colors">
@@ -353,10 +456,10 @@ const About = () => {
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Our Values
+              {pageContent.values.title}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Our Recruitment Values in Life-Sciences & Biostatistics
+              {pageContent.values.subtitle}
             </p>
           </div>
 
@@ -368,9 +471,9 @@ const About = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-gray-900">Excellence</h3>
+              <h3 className="text-xl font-medium mb-4 text-gray-900">{pageContent.values.excellence.title}</h3>
               <p className="text-gray-600 leading-relaxed">
-              We uphold the highest standards in biostatistics candidate assessment and life-science client service.
+                {pageContent.values.excellence.description}
               </p>
             </div>
 
@@ -381,9 +484,9 @@ const About = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-gray-900">Integrity</h3>
+              <h3 className="text-xl font-medium mb-4 text-gray-900">{pageContent.values.integrity.title}</h3>
               <p className="text-gray-600 leading-relaxed">
-              Transparent, data-driven communication builds long-term trust with our pharma and CRO partners.
+                {pageContent.values.integrity.description}
               </p>
             </div>
 
@@ -394,9 +497,9 @@ const About = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-gray-900">Expertise</h3>
+              <h3 className="text-xl font-medium mb-4 text-gray-900">{pageContent.values.expertise.title}</h3>
               <p className="text-gray-600 leading-relaxed">
-              Our recruiters’ deep biometrics domain knowledge enables precise technical placements.
+                {pageContent.values.expertise.description}
               </p>
             </div>
           </div>
@@ -408,10 +511,10 @@ const About = () => {
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Our Impact
+              {pageContent.stats.title}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Measurable results that demonstrate our commitment to excellence
+              {pageContent.stats.subtitle}
             </p>
           </div>
 
@@ -419,38 +522,38 @@ const About = () => {
             <div className="text-center opacity-0" data-animate-delay="0">
               <div className="text-5xl md:text-6xl font-light text-brand-blue mb-2">
                 <AnimatedCounter
-                  targetValue="90+"
+                  targetValue={pageContent.stats.placements.value}
                   className="text-5xl md:text-6xl font-light text-brand-blue"
                 />
               </div>
-              <p className="text-gray-700 text-lg">Successful Placements</p>
+              <p className="text-gray-700 text-lg">{pageContent.stats.placements.label}</p>
             </div>
             <div className="text-center opacity-0" data-animate-delay="100">
               <div className="text-5xl md:text-6xl font-light text-brand-blue mb-2">
                 <AnimatedCounter
-                  targetValue="3"
+                  targetValue={pageContent.stats.timeToHire.value}
                   className="text-5xl md:text-6xl font-light text-brand-blue"
                 />
               </div>
-              <p className="text-gray-700 text-lg">Weeks Average Time-to-Hire</p>
+              <p className="text-gray-700 text-lg">{pageContent.stats.timeToHire.label}</p>
             </div>
             <div className="text-center opacity-0" data-animate-delay="200">
               <div className="text-5xl md:text-6xl font-light text-brand-blue mb-2">
                 <AnimatedCounter
-                  targetValue="95%"
+                  targetValue={pageContent.stats.satisfaction.value}
                   className="text-5xl md:text-6xl font-light text-brand-blue"
                 />
               </div>
-              <p className="text-gray-700 text-lg">Client Satisfaction Rate</p>
+              <p className="text-gray-700 text-lg">{pageContent.stats.satisfaction.label}</p>
             </div>
             <div className="text-center opacity-0" data-animate-delay="300">
               <div className="text-5xl md:text-6xl font-light text-brand-blue mb-2">
                 <AnimatedCounter
-                  targetValue="50+"
+                  targetValue={pageContent.stats.partners.value}
                   className="text-5xl md:text-6xl font-light text-brand-blue"
                 />
               </div>
-              <p className="text-gray-700 text-lg">Partner Organisations</p>
+              <p className="text-gray-700 text-lg">{pageContent.stats.partners.label}</p>
             </div>
           </div>
         </div>
@@ -519,7 +622,7 @@ const About = () => {
                   />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">
-                  Specialized recruitment for life sciences data and biometrics professionals across global markets.
+                  Specialised recruitment for life sciences data and biometrics professionals across global markets.
                 </p>
               </div>
 
@@ -529,7 +632,6 @@ const About = () => {
                 <ul className="space-y-4">
                   <li><a href="/employers" className="text-gray-300 hover:text-white transition-colors text-sm">Post a Job</a></li>
                   <li><a href="/specialisms" className="text-gray-300 hover:text-white transition-colors text-sm">Specialisms</a></li>
-                  <li><a href="/employers#pricing" className="text-gray-300 hover:text-white transition-colors text-sm">Pricing</a></li>
                   <li><a href="/about" className="text-gray-300 hover:text-white transition-colors text-sm">About Us</a></li>
                   <li><a href="/contact" className="text-gray-300 hover:text-white transition-colors text-sm">Contact</a></li>
                 </ul>

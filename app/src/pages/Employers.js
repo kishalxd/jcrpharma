@@ -205,6 +205,7 @@ const Employers = () => {
   const navigate = useNavigate();
   const [activeQuestion, setActiveQuestion] = useState(null);
   const [testimonials, setTestimonials] = useState([]);
+  const [content, setContent] = useState(null);
 
   // Animation refs
   const [heroRef, heroVisible] = useScrollAnimation(0.2);
@@ -248,28 +249,111 @@ const Employers = () => {
     setActiveQuestion(activeQuestion === index ? null : index);
   };
 
-  const faqData = [
-    {
-      question: "What is your average time-to-hire for specialised roles?",
-      answer: "Our average time-to-hire is 21 days for most specialised biometrics and data science roles. For senior positions, we typically deliver qualified candidates within 21 days."
+  // Default content (fallback)
+  const defaultContent = {
+    hero: {
+      title: "Hire Biometrics & Data Talent, Fast",
+      subtitle: "Access pre-vetted specialists in biostatistics, clinical data management, and bioinformatics. 21-days average placement with 95% success rate."
     },
-    {
-      question: "Do you provide candidates with regulatory compliance experience?",
-      answer: "Yes, all our candidates are pre-screened for regulatory compliance knowledge including FDA, EMA, and ICH guidelines relevant to their specialisation."
+    services: {
+      title: "Why Leading Companies Choose Us",
+      subtitle: "Specialised recruitment that delivers speed, quality, compliance, and global reach"
     },
-    {
-      question: "What geographical markets do you cover?",
-      answer: "We provide talent across UK, EU, and US markets with deep expertise in local regulatory requirements and market conditions."
+    process: {
+      title: "How We Deliver Exceptional Results",
+      subtitle: "Detailed process with guaranteed SLAs and transparent communication"
     },
-    {
-      question: "What is your candidate retention rate?",
-      answer: "We maintain a 92% candidate retention rate at 12 months, demonstrating our thorough vetting process and cultural fit assessment."
+    locations: {
+      title: "Coverage Across Key Markets",
+      subtitle: "Strategic presence in major life-sciences hubs with local market expertise"
     },
-    {
-      question: "Do you offer contract and permanent placements?",
-      answer: "Yes, we provide both contract and permanent placement solutions, tailored to your specific project needs and organisational requirements."
+    testimonials: {
+      title: "What our clients say"
+    },
+    getStartedCta: {
+      title: "Tell us about your hiring needs",
+      subtitle: "Submit your requirements and we'll provide a tailored recruitment strategy within 24 hours. Connect with specialised talent across biostatistics, clinical data management, and bioinformatics."
+    },
+    faq: {
+      title: "Frequently asked questions",
+      subtitle: "Everything you need to know about our hiring process",
+      items: [
+        {
+          question: "What is your average time-to-hire for specialised roles?",
+          answer: "Our average time-to-hire is 21 days for most specialised biometrics and data science roles. For senior positions, we typically deliver qualified candidates within 21 days."
+        },
+        {
+          question: "Do you provide candidates with regulatory compliance experience?",
+          answer: "Yes, all our candidates are pre-screened for regulatory compliance knowledge including FDA, EMA, and ICH guidelines relevant to their specialisation."
+        },
+        {
+          question: "What geographical markets do you cover?",
+          answer: "We provide talent across UK, EU, and US markets with deep expertise in local regulatory requirements and market conditions."
+        },
+        {
+          question: "What is your candidate retention rate?",
+          answer: "We maintain a 92% candidate retention rate at 12 months, demonstrating our thorough vetting process and cultural fit assessment."
+        },
+        {
+          question: "Do you offer contract and permanent placements?",
+          answer: "Yes, we provide both contract and permanent placement solutions, tailored to your specific project needs and organisational requirements."
+        }
+      ]
+    },
+    finalCta: {
+      title: "Ready to hire exceptional talent?",
+      subtitle: "Join leading pharmaceutical and biotech companies who trust us to deliver specialised talent fast"
     }
-  ];
+  };
+
+  // Fetch content from database
+  const fetchContent = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('page_contents')
+        .select('content')
+        .eq('page_name', 'employers')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching content:', error);
+        setContent(defaultContent);
+      } else if (data) {
+        // Merge with defaults to ensure all fields exist
+        const mergedContent = {
+          ...defaultContent,
+          ...(data.content || {}),
+          hero: { ...defaultContent.hero, ...(data.content?.hero || {}) },
+          services: { ...defaultContent.services, ...(data.content?.services || {}) },
+          process: { ...defaultContent.process, ...(data.content?.process || {}) },
+          locations: { ...defaultContent.locations, ...(data.content?.locations || {}) },
+          testimonials: { ...defaultContent.testimonials, ...(data.content?.testimonials || {}) },
+          getStartedCta: { ...defaultContent.getStartedCta, ...(data.content?.getStartedCta || {}) },
+          faq: { 
+            ...defaultContent.faq, 
+            ...(data.content?.faq || {}),
+            items: data.content?.faq?.items && data.content.faq.items.length > 0 
+              ? data.content.faq.items 
+              : defaultContent.faq.items
+          },
+          finalCta: { ...defaultContent.finalCta, ...(data.content?.finalCta || {}) }
+        };
+        setContent(mergedContent);
+      } else {
+        setContent(defaultContent);
+      }
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      setContent(defaultContent);
+    }
+  };
+
+  useEffect(() => {
+    fetchContent();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const pageContent = content || defaultContent;
 
   const fetchTestimonials = async () => {
     try {
@@ -324,15 +408,14 @@ const Employers = () => {
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-8'
             }`}>
-              Hire Biometrics & Data Talent, Fast
+              {pageContent.hero.title}
             </h1>
             <p className={`text-gray-300 text-xl mb-12 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-400 ${
               heroVisible 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-8'
             }`}>
-              Access pre-vetted specialists in biostatistics, clinical data management, and bioinformatics. <br></br>
-              <AnimatedCounter end={21} className="font-semibold" />-days average placement with <AnimatedCounter end={95} suffix="%" className="font-semibold" /> success rate.
+              {pageContent.hero.subtitle}
             </p>
             
             {/* CTA Buttons */}
@@ -376,10 +459,10 @@ const Employers = () => {
           >
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our USPs</p>
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Why Leading Companies Choose Us
+              {pageContent.services.title}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Specialised recruitment that delivers speed, quality, compliance, and global reach
+              {pageContent.services.subtitle}
             </p>
           </div>
 
@@ -468,10 +551,10 @@ const Employers = () => {
           >
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Our process</p>
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              How We Deliver Exceptional Results
+              {pageContent.process.title}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Detailed process with guaranteed SLAs and transparent communication
+              {pageContent.process.subtitle}
             </p>
           </div>
 
@@ -752,10 +835,10 @@ const Employers = () => {
           <div className="text-center mb-16">
             <p className="text-gray-600 text-sm uppercase tracking-wide mb-4">Global presence</p>
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Coverage Across Key Markets
+              {pageContent.locations.title}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Strategic presence in major life-sciences hubs with local market expertise
+              {pageContent.locations.subtitle}
             </p>
           </div>
 
@@ -808,7 +891,7 @@ const Employers = () => {
           >
             <div className="text-center mb-16">
               <h2 className="text-2xl md:text-3xl font-light text-white mb-8 leading-tight">
-                What our clients say
+                {pageContent.testimonials.title}
               </h2>
             </div>
             <TestimonialsCarousel testimonials={testimonials} />
@@ -821,10 +904,10 @@ const Employers = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Tell us about your hiring needs
+              {pageContent.getStartedCta.title}
             </h2>
             <p className="text-gray-600 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Submit your requirements and we'll provide a tailored recruitment strategy within 24 hours. Connect with specialised talent across biostatistics, clinical data management, and bioinformatics.
+              {pageContent.getStartedCta.subtitle}
             </p>
             
             <div className="flex justify-center">
@@ -851,15 +934,15 @@ const Employers = () => {
             }`}
           >
             <h2 className="text-4xl md:text-5xl font-light mb-8 leading-tight text-gray-900">
-              Frequently asked questions
+              {pageContent.faq.title}
             </h2>
             <p className="text-gray-600 text-lg max-w-3xl mx-auto">
-              Everything you need to know about our hiring process
+              {pageContent.faq.subtitle}
             </p>
           </div>
 
           <div className="max-w-3xl mx-auto space-y-4">
-            {faqData.map((item, index) => (
+            {(pageContent.faq.items || []).map((item, index) => (
               <div 
                 key={index} 
                 className={`bg-white rounded-lg shadow-sm transition-all duration-700 hover:shadow-md ${
@@ -912,14 +995,14 @@ const Employers = () => {
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-8'
             }`}>
-              Ready to hire exceptional talent?
+              {pageContent.finalCta.title}
             </h2>
             <p className={`text-gray-300 text-lg mb-12 max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-400 ${
               ctaVisible 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-8'
             }`}>
-              Join leading pharmaceutical and biotech companies who trust us to deliver specialised talent fast
+              {pageContent.finalCta.subtitle}
             </p>
             
             {/* CTA Button */}

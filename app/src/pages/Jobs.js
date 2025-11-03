@@ -20,6 +20,8 @@ const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [jobsPerPage] = useState(10);
   const navigate = useNavigate();
 
   const popularSearches = [
@@ -233,6 +235,58 @@ const Jobs = () => {
   const filteredJobs = getFilteredJobs();
   const sortedJobs = getSortedJobs(filteredJobs);
 
+  // Pagination calculations
+  const totalPages = Math.ceil(sortedJobs.length / jobsPerPage);
+  const startIndex = (currentPage - 1) * jobsPerPage;
+  const endIndex = startIndex + jobsPerPage;
+  const paginatedJobs = sortedJobs.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchKeyword, searchLocation, selectedFilters, sortBy]);
+
+  // Generate pagination buttons
+  const getPaginationButtons = () => {
+    const buttons = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if total pages is less than max
+      for (let i = 1; i <= totalPages; i++) {
+        buttons.push(i);
+      }
+    } else {
+      // Always show first page
+      buttons.push(1);
+
+      if (currentPage > 3) {
+        buttons.push('...');
+      }
+
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        if (i !== 1 && i !== totalPages) {
+          buttons.push(i);
+        }
+      }
+
+      if (currentPage < totalPages - 2) {
+        buttons.push('...');
+      }
+
+      // Always show last page
+      if (totalPages > 1) {
+        buttons.push(totalPages);
+      }
+    }
+
+    return buttons;
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Header Section */}
@@ -244,7 +298,7 @@ const Jobs = () => {
               biometrics & data
             </h1>
             <p className="text-gray-300 text-base md:text-lg mb-8 max-w-3xl mx-auto leading-relaxed">
-              Discover specialized opportunities in biostatistics, clinical data management, bioinformatics,<br />
+              Discover specialised opportunities in biostatistics, clinical data management, bioinformatics,<br />
               and medical affairs across leading life-sciences companies.
             </p>
             
@@ -508,7 +562,7 @@ const Jobs = () => {
               {/* Job Listings */}
               {!loading && !error && (
                 <div className={`space-y-6 ${viewMode === 'grid' ? 'md:grid md:grid-cols-2 md:gap-6 md:space-y-0' : ''}`}>
-                  {sortedJobs.map((job) => (
+                  {paginatedJobs.map((job) => (
                   <div
                     key={job.id}
                     className={`bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow ${
@@ -606,23 +660,45 @@ const Jobs = () => {
               )}
 
               {/* Pagination */}
-              <div className="flex justify-center items-center gap-4 mt-8">
-                <button className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-all duration-300 font-medium border border-gray-300 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                  Previous
-                </button>
-                
-                <div className="flex items-center gap-2">
-                  <button className="bg-brand-blue text-white px-3 py-2 rounded-lg text-sm font-medium">1</button>
-                  <button className="bg-white hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300">2</button>
-                  <button className="bg-white hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300">3</button>
-                  <span className="text-gray-500 px-2">...</span>
-                  <button className="bg-white hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium border border-gray-300">12</button>
+              {!loading && !error && sortedJobs.length > 0 && totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-8">
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-all duration-300 font-medium border border-gray-300 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center gap-2">
+                    {getPaginationButtons().map((page, index) => (
+                      page === '...' ? (
+                        <span key={`ellipsis-${index}`} className="text-gray-500 px-2">...</span>
+                      ) : (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            currentPage === page
+                              ? 'bg-brand-blue text-white'
+                              : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      )
+                    ))}
+                  </div>
+                  
+                  <button 
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-all duration-300 font-medium border border-gray-300 hover:border-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
                 </div>
-                
-                <button className="bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg transition-all duration-300 font-medium border border-gray-300 hover:border-gray-400">
-                  Next
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -752,7 +828,7 @@ const Jobs = () => {
               in your career?
             </h2>
             <p className="text-gray-300 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-              Join thousands of life sciences professionals who have found their dream roles through our specialized recruitment platform.
+              Join thousands of life sciences professionals who have found their dream roles through our specialised recruitment platform.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

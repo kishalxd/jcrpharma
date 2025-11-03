@@ -135,6 +135,8 @@ CREATE TABLE public.testimonials (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
     text TEXT NOT NULL,
+    position TEXT,
+    company TEXT,
     image_url TEXT,
     image_name TEXT,
     status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
@@ -147,6 +149,17 @@ CREATE TABLE public.testimonials (
 CREATE INDEX idx_testimonials_status ON testimonials(status);
 CREATE INDEX idx_testimonials_display_order ON testimonials(display_order);
 CREATE INDEX idx_testimonials_created_at ON testimonials(created_at DESC);
+```
+
+**Migration for existing tables:**
+
+If you already have the `testimonials` table created, run this to add the new columns:
+
+```sql
+-- Add position and company columns to existing testimonials table
+ALTER TABLE public.testimonials 
+ADD COLUMN IF NOT EXISTS position TEXT,
+ADD COLUMN IF NOT EXISTS company TEXT;
 ```
 
 ### 7. Disable RLS (for now)
@@ -246,6 +259,8 @@ ALTER TABLE public.testimonials DISABLE ROW LEVEL SECURITY;
 | `id` | UUID | Primary key | Auto-generated |
 | `name` | TEXT | Person's name | NOT NULL |
 | `text` | TEXT | Testimonial text | NOT NULL |
+| `position` | TEXT | Person's job position/title | Optional |
+| `company` | TEXT | Person's company name | Optional |
 | `image_url` | TEXT | Supabase storage URL for photo | Optional |
 | `image_name` | TEXT | Original image filename | Optional |
 | `status` | TEXT | Testimonial status | Default: 'active', CHECK constraint |
