@@ -19,7 +19,7 @@ const BlogManager = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('blogs')
-        .select('id, title, content, excerpt, author, cover_image, is_archived, is_featured, feature_type, feature_order, blog_group, created_at, updated_at')
+        .select('id, slug, title, content, excerpt, author, cover_image, is_archived, is_featured, feature_type, feature_order, blog_group, created_at, updated_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

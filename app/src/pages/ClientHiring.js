@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { sendEmailNotification } from '../utils/emailUtils';
 
 const ClientHiring = () => {
   const navigate = useNavigate();
@@ -53,6 +54,20 @@ const ClientHiring = () => {
       }
 
       console.log('Hiring request submitted successfully:', data);
+      
+      // Send email notification
+      const emailTitle = 'New Hiring Request Submitted';
+      const emailBody = `A new hiring request has been submitted:\n\n` +
+        `Name: ${formData.personName}\n` +
+        `Title: ${formData.title}\n` +
+        `Company: ${formData.businessName}\n` +
+        `Email: ${formData.email}\n` +
+        `Phone: ${formData.phone}\n` +
+        `Location: ${formData.location}\n` +
+        `Role Overview: ${formData.roleOverview}`;
+      
+      await sendEmailNotification(emailTitle, emailBody);
+      
       setSubmitMessage('Hiring request submitted successfully! We\'ll contact you soon to discuss your requirements.');
       
       // Reset form

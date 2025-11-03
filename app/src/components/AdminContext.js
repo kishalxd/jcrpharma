@@ -21,7 +21,7 @@ export const AdminProvider = ({ children }) => {
 
   const adminLogin = (username, password) => {
     // Hardcoded admin credentials
-    if (username === 'captainprice' && password === '123') {
+    if (username === 'JCRPharmaAdmin' && password === 'Jimbo1995C!!') {
       setIsAdminAuthenticated(true);
       localStorage.setItem('adminSession', 'authenticated');
       return { success: true };

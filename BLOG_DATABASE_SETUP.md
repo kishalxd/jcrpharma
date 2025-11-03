@@ -13,6 +13,7 @@ Run the following SQL in your Supabase SQL Editor:
 CREATE TABLE public.blogs (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
+    slug TEXT UNIQUE,
     content TEXT NOT NULL,
     excerpt TEXT,
     author TEXT DEFAULT 'Admin',
@@ -25,6 +26,10 @@ CREATE TABLE public.blogs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Add slug column to existing blogs table (if already exists)
+ALTER TABLE public.blogs ADD COLUMN IF NOT EXISTS slug TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_blogs_slug ON blogs(slug) WHERE slug IS NOT NULL;
 
 -- Create blog groups table
 CREATE TABLE public.blog_groups (
@@ -68,10 +73,11 @@ ALTER TABLE public.blogs DISABLE ROW LEVEL SECURITY;
 |--------|------|-------------|-------------|
 | `id` | UUID | Primary key | Auto-generated |
 | `title` | TEXT | Blog post title | NOT NULL |
+| `slug` | TEXT | URL-friendly slug (auto-generated from title) | Optional, UNIQUE |
 | `content` | TEXT | Full blog content (supports HTML) | NOT NULL |
 | `excerpt` | TEXT | Short description/preview | Optional |
 | `author` | TEXT | Author name | Default: 'Admin' |
-| `cover_image` | TEXT | Cover image (base64 or URL) | Optional |
+| `cover_image` | TEXT | Cover image (WebP compressed base64) | Optional |
 | `is_archived` | BOOLEAN | Archive status | Default: false |
 | `is_featured` | BOOLEAN | Featured status | Default: false |
 | `feature_type` | TEXT | Feature type ('main', 'sub', or null) | Optional |
@@ -79,6 +85,8 @@ ALTER TABLE public.blogs DISABLE ROW LEVEL SECURITY;
 | `blog_group` | TEXT | Blog group name | Optional |
 | `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
 | `updated_at` | TIMESTAMP | Last update timestamp | Auto-generated |
+
+**Note:** Images are automatically compressed to WebP format (max 1200x800px) for faster loading. URLs use readable slugs like `/blog/pharma-data-analytics` instead of IDs.
 
 ### Blog Groups Table
 

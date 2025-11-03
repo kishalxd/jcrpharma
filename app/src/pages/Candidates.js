@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useSEO } from '../hooks/useSEO';
 
 // Custom hook for scroll animations
 const useScrollAnimation = () => {
@@ -217,6 +218,12 @@ const Candidates = () => {
   const [featuredJobs, setFeaturedJobs] = useState([]);
   const [jobsLoading, setJobsLoading] = useState(true);
   const [content, setContent] = useState(null);
+
+  // Set SEO metadata
+  useSEO(
+    'For Candidates',
+    'Discover exciting career opportunities in life sciences and biometrics with JCR Pharma. Browse biostatistics, clinical data management, data science, and bioinformatics jobs at leading pharmaceutical and biotech companies across UK, USA, and Europe. Upload your CV and get matched with your next role.'
+  );
   
   // Newsletter subscription state
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -876,8 +883,8 @@ const Candidates = () => {
                     onClick={handleDownloadGuideClick}
                     className="bg-white text-brand-blue hover:bg-gray-100 px-6 py-3 rounded-full transition-all duration-300 font-medium w-full"
                   >
-                    Download Free Guide
-                  </button>
+                Download Free Guide
+              </button>
                 </div>
                 <div className={`flex items-center gap-3 w-full max-w-md mx-auto transition-all duration-500 ease-in-out ${
                   showDownloadForm 
@@ -1045,11 +1052,7 @@ const Candidates = () => {
                   <img 
                     src="jcr_white_transparent.png" 
                     alt="JCR Pharma" 
-                    className="h-12 w-auto object-cover"
-                    style={{
-                      clipPath: 'inset(20% 0 20% 0)',
-                      transform: 'scaleY(1.67)'
-                    }}
+                    className="h-12 w-auto object-contain"
                   />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">

@@ -18,7 +18,7 @@ const AdminLogin = () => {
       if (redirectUrl) {
         navigate(redirectUrl);
       } else {
-        navigate('/admin');
+        navigate('/admin/edit-pages');
       }
     }
   }, [isAdminAuthenticated, navigate, searchParams]);
@@ -36,7 +36,7 @@ const AdminLogin = () => {
       if (redirectUrl) {
         navigate(redirectUrl);
       } else {
-        navigate('/admin');
+        navigate('/admin/edit-pages');
       }
     } else {
       setError(result.error);

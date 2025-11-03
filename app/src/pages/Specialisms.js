@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAdmin } from '../components/AdminContext';
+import { useSEO } from '../hooks/useSEO';
+import { sendEmailNotification } from '../utils/emailUtils';
 
 // EditableText Component for inline editing
 const EditableText = ({ value, onChange, multiline = false, placeholder, className = "", rows = 1, editMode = false, variant = 'dark' }) => {
@@ -244,12 +246,18 @@ const ParallaxTimelineSection = ({ timeline, editMode, pageContent, updateConten
   );
 };
 
-const Specializations = () => {
+const Specialisations = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAdminAuthenticated } = useAdmin();
   const [activeSpecialism, setActiveSpecialism] = useState('biostatistics');
   const [openFaq, setOpenFaq] = useState(null);
+
+  // Set SEO metadata
+  useSEO(
+    'Specialisms',
+    'Expert recruitment services for life sciences specialisations: biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Connect with JCR Pharma for specialised talent solutions across pharmaceutical, biotech, and medical device companies in UK, USA, and Europe.'
+  );
   
   // Edit mode state
   const [editMode, setEditMode] = useState(false);
@@ -270,7 +278,7 @@ const Specializations = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState('');
 
-  const specializations = {
+  const specialisations = {
     biostatistics: {
       title: 'Biostatistics',
       fullTitle: 'Biostatistics Recruitment',
@@ -332,8 +340,8 @@ const Specializations = () => {
       subtitle: "Common questions about our specialised recruitment process and services",
       items: [
         {
-          question: "What specializations do you cover in life sciences recruitment?",
-          answer: "We specialize in biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies."
+          question: "What specialisations do you cover in life sciences recruitment?",
+          answer: "We specialise in biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies."
         },
         {
           question: "How long does the typical recruitment process take?",
@@ -470,13 +478,13 @@ const Specializations = () => {
     setEditMode(false);
   };
 
-  // Handle URL parameters to set the active specialization
+  // Handle URL parameters to set the active specialisation
   useEffect(() => {
     const focusParam = searchParams.get('focus');
-    if (focusParam && specializations[focusParam]) {
+    if (focusParam && specialisations[focusParam]) {
       setActiveSpecialism(focusParam);
     }
-  }, [searchParams, specializations]);
+  }, [searchParams, specialisations]);
 
   // Form handlers
   const handleInputChange = (e) => {
@@ -513,6 +521,20 @@ const Specializations = () => {
       }
 
       console.log('Hiring request submitted successfully:', data);
+      
+      // Send email notification
+      const emailTitle = 'New Hiring Request Submitted';
+      const emailBody = `A new hiring request has been submitted:\n\n` +
+        `Name: ${formData.personName}\n` +
+        `Title: ${formData.title}\n` +
+        `Company: ${formData.businessName}\n` +
+        `Email: ${formData.email}\n` +
+        `Phone: ${formData.phone}\n` +
+        `Location: ${formData.location}\n` +
+        `Role Overview: ${formData.roleOverview}`;
+      
+      await sendEmailNotification(emailTitle, emailBody);
+      
       setSubmitMessage('Hiring request submitted successfully! We\'ll contact you soon to discuss your requirements.');
       
       // Reset form
@@ -547,7 +569,7 @@ const Specializations = () => {
       title: 'Define Your Ideal Candidate',
       description: 'We identify the perfect candidate profile including non-negotiables, nice-to-haves, personality traits, and target companies for headhunting.',
       duration: '1 day',
-      details: ['CV requirements mapping', 'Skills prioritization', 'Personality profiling', 'Target company identification']
+      details: ['CV requirements mapping', 'Skills prioritisation', 'Personality profiling', 'Target company identification']
     },
     {
       step: 3,
@@ -580,7 +602,7 @@ const Specializations = () => {
     {
       step: 7,
       title: 'Closing the Offer',
-      description: 'Proactive management of potential obstacles, deep understanding of candidate motivations, and strategic positioning to maximize offer acceptance rates.',
+      description: 'Proactive management of potential obstacles, deep understanding of candidate motivations, and strategic positioning to maximise offer acceptance rates.',
       duration: '3-5 days',
       details: ['Counteroffer management', 'Decision tracking', 'Motivation analysis', 'Strategic positioning']
     }
@@ -621,8 +643,8 @@ const Specializations = () => {
 
   const faqs = [
     {
-      question: 'What specializations do you cover in life sciences recruitment?',
-      answer: 'We specialize in biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies.'
+      question: 'What specialisations do you cover in life sciences recruitment?',
+      answer: 'We specialise in biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies.'
     },
     {
       question: 'How long does the typical recruitment process take?',
@@ -722,7 +744,7 @@ const Specializations = () => {
         </div>
       </section>
 
-      {/* Specializations Section - Full Width */}
+      {/* Specialisations Section - Full Width */}
       <section className="bg-white">
         <div className="w-full">
           <div className="bg-white shadow-xl">
@@ -730,7 +752,7 @@ const Specializations = () => {
             <div className="border-b border-gray-200">
               <div className="container mx-auto px-6">
                 <div className="flex overflow-x-auto">
-                {Object.entries(specializations).map(([key, specialization]) => (
+                {Object.entries(specialisations).map(([key, specialisation]) => (
                 <button
                   key={key}
                   onClick={() => setActiveSpecialism(key)}
@@ -740,7 +762,7 @@ const Specializations = () => {
                         : 'text-gray-600 border-transparent hover:text-gray-900 hover:border-gray-300'
                     }`}
                   >
-                    {specialization.title}
+                    {specialisation.title}
                   </button>
                 ))}
                 </div>
@@ -870,12 +892,12 @@ const Specializations = () => {
                 </h3>
                 
                 <p className="text-gray-700 mb-8 leading-relaxed">
-                  We specialise in recruiting for a range of areas within {specializations[activeSpecialism].title.toLowerCase()}, such as:
+                  We specialise in recruiting for a range of areas within {specialisations[activeSpecialism].title.toLowerCase()}, such as:
                 </p>
                 
                 {/* Key Areas List */}
                 <div className="space-y-4">
-                  {specializations[activeSpecialism].features.map((feature, index) => (
+                  {specialisations[activeSpecialism].features.map((feature, index) => (
                     <div key={index} className="flex items-start">
                       <div className="w-2 h-2 bg-brand-blue rounded-full mt-2 mr-3 flex-shrink-0"></div>
                       <span className="text-gray-700">{feature}</span>
@@ -887,7 +909,7 @@ const Specializations = () => {
                 <div className="mt-8">
                   <h4 className="text-lg font-medium text-gray-900 mb-4">Key roles we recruit for:</h4>
                   <div className="space-y-3">
-                    {specializations[activeSpecialism].roles.slice(0, 4).map((role, index) => (
+                    {specialisations[activeSpecialism].roles.slice(0, 4).map((role, index) => (
                       <div key={index} className="flex items-start">
                         <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                         <span className="text-gray-600 text-sm">{role}</span>
@@ -1224,11 +1246,7 @@ const Specializations = () => {
                   <img 
                     src="/jcr_white_transparent.png" 
                     alt="JCR Pharma" 
-                    className="h-12 w-auto object-cover"
-                    style={{
-                      clipPath: 'inset(20% 0 20% 0)',
-                      transform: 'scaleY(1.67)'
-                    }}
+                    className="h-12 w-auto object-contain"
                   />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">
@@ -1236,9 +1254,9 @@ const Specializations = () => {
                 </p>
               </div>
 
-              {/* Specializations */}
+              {/* Specialisations */}
               <div>
-                <h4 className="text-white font-medium mb-6">Specializations</h4>
+                <h4 className="text-white font-medium mb-6">Specialisms</h4>
                 <ul className="space-y-4">
                   <li><a href="/specialisms/biostatistics" className="text-gray-300 hover:text-white transition-colors text-sm">Biostatistics</a></li>
                   <li><a href="/specialisms/clinical" className="text-gray-300 hover:text-white transition-colors text-sm">Clinical Data Management</a></li>
@@ -1295,4 +1313,4 @@ const Specializations = () => {
   );
 };
 
-export default Specializations; 
+export default Specialisations; 

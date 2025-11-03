@@ -7,6 +7,7 @@ const Header = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeIndicator, setActiveIndicator] = useState({ left: 0, width: 0 });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navRef = useRef(null);
   const location = useLocation();
 
@@ -103,9 +104,19 @@ const Header = () => {
     return () => cancelAnimationFrame(rafId);
   }, [location.pathname]);
 
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const handleSignOut = async () => {
     await signOut();
     setShowUserMenu(false);
+    setIsMobileMenuOpen(false);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
   };
 
   const isActiveLink = (path) => {
@@ -159,22 +170,22 @@ const Header = () => {
           </div>
         ) : (
           // Regular page header layout
-          <div className="grid grid-cols-3 items-center">
+          <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex justify-start">
-              <Link to="/" className="flex items-center">
+            <div className="flex justify-start flex-shrink-0">
+              <Link to="/" className="flex items-center" onClick={closeMobileMenu}>
                 <img 
                   src="/logo_transparent.png" 
                   alt="JCR Logo" 
-                  className="h-10 w-auto"
+                  className="h-8 md:h-10 w-auto"
                 />
               </Link>
             </div>
             
-            {/* Navigation - Centered with fluid indicator */}
+            {/* Desktop Navigation - Centered with fluid indicator */}
             <nav 
               ref={navRef}
-              className="hidden md:flex items-center justify-center relative"
+              className="hidden lg:flex items-center justify-center relative flex-1"
               style={{ gap: '8px' }}
             >
               {/* Fluid background indicator */}
@@ -209,8 +220,8 @@ const Header = () => {
               ))}
             </nav>
             
-            {/* Action Buttons */}
-            <div className="flex items-center justify-end space-x-4">
+            {/* Desktop Action Buttons */}
+            <div className="hidden lg:flex items-center justify-end space-x-4 flex-shrink-0">
               {user ? (
                 <div className="flex items-center space-x-4">
                   <Link
@@ -235,7 +246,7 @@ const Header = () => {
                           {user.user_metadata?.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
                         </span>
                       </div>
-                      <span className="font-medium hidden sm:block">
+                      <span className="font-medium">
                         {user.user_metadata?.firstName || 'User'}
                       </span>
                       <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24">
@@ -288,6 +299,106 @@ const Header = () => {
                 •
               </Link>
             </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex items-center space-x-2 lg:hidden">
+              {/* Mobile Action Buttons - Show only when menu is closed */}
+              {!isMobileMenuOpen && (
+                <>
+                  {user ? (
+                    <Link
+                      to="/find-jobs"
+                      className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-full transition-all duration-300 font-medium text-sm"
+                    >
+                      Find Jobs
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/find-jobs"
+                      className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-full transition-all duration-300 font-medium text-sm"
+                    >
+                      Find Jobs
+                    </Link>
+                  )}
+                </>
+              )}
+              
+              {/* Burger Menu Icon */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 text-gray-700 hover:text-brand-blue transition-colors focus:outline-none"
+                aria-label="Toggle menu"
+              >
+                {isMobileMenuOpen ? (
+                  // Close icon (X)
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  // Hamburger icon
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="lg:hidden border-t border-gray-200 bg-white">
+            <nav className="px-6 py-4 space-y-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={closeMobileMenu}
+                  className={`block px-4 py-3 rounded-lg transition-colors ${
+                    isActiveLink(item.path)
+                      ? 'bg-brand-blue/10 text-brand-blue font-medium'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              
+              {/* Mobile Action Buttons */}
+              <div className="pt-4 mt-4 border-t border-gray-200 space-y-2">
+                <Link
+                  to="/hire-talent"
+                  onClick={closeMobileMenu}
+                  className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors font-medium"
+                >
+                  Hire talent
+                </Link>
+                {user ? (
+                  <>
+                    <Link
+                      to="/profile"
+                      onClick={closeMobileMenu}
+                      className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      Profile Settings
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : null}
+                <Link
+                  to="/admin-login"
+                  onClick={closeMobileMenu}
+                  className="block px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-100 transition-colors text-sm"
+                >
+                  Admin Access
+                </Link>
+              </div>
+            </nav>
           </div>
         )}
       </div>

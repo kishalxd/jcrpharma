@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import RichTextEditor from './RichTextEditor';
 import { supabase } from '../supabaseClient';
+import { generateSlug, compressImageToWebP } from '../utils/blogUtils';
 
 const BlogEditor = ({ blog, onSave, onCancel, isEditing }) => {
   const [formData, setFormData] = useState({
     title: '',
+    slug: '',
     content: '',
     excerpt: '',
     author: 'Admin',
@@ -26,6 +28,7 @@ const BlogEditor = ({ blog, onSave, onCancel, isEditing }) => {
     if (blog) {
       setFormData({
         title: blog.title || '',
+        slug: blog.slug || generateSlug(blog.title || ''),
         content: blog.content || '',
         excerpt: blog.excerpt || '',
         author: blog.author || 'Admin',
@@ -54,10 +57,17 @@ const BlogEditor = ({ blog, onSave, onCancel, isEditing }) => {
   };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [field]: value
+      };
+      // Auto-generate slug when title changes
+      if (field === 'title' && !prev.slug) {
+        updated.slug = generateSlug(value);
+      }
+      return updated;
+    });
   };
 
   const handleSave = async (type) => {
@@ -70,8 +80,12 @@ const BlogEditor = ({ blog, onSave, onCancel, isEditing }) => {
     setSaveType(type);
     
     try {
+      // Ensure slug is generated if missing
+      const slug = formData.slug || generateSlug(formData.title);
+      
       const dataToSave = {
         ...formData,
+        slug: slug,
         is_archived: type === 'save' ? true : false // Save as draft = archived
       };
       await onSave(dataToSave);
@@ -92,18 +106,26 @@ const BlogEditor = ({ blog, onSave, onCancel, isEditing }) => {
     }
   };
 
-  const handleCoverImageUpload = () => {
+  const handleCoverImageUpload = async () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          handleChange('cover_image', e.target.result);
-        };
-        reader.readAsDataURL(file);
+        try {
+          // Compress image to WebP
+          const compressedImage = await compressImageToWebP(file, 1200, 800, 0.85);
+          handleChange('cover_image', compressedImage);
+        } catch (error) {
+          console.error('Error compressing image:', error);
+          // Fallback to original file if compression fails
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            handleChange('cover_image', e.target.result);
+          };
+          reader.readAsDataURL(file);
+        }
       }
     };
     input.click();
@@ -271,6 +293,23 @@ const BlogEditor = ({ blog, onSave, onCancel, isEditing }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none text-sm"
                 placeholder="Enter blog title..."
               />
+            </div>
+
+            {/* Slug */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                URL Slug
+              </label>
+              <input
+                type="text"
+                value={formData.slug}
+                onChange={(e) => handleChange('slug', generateSlug(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-blue focus:border-brand-blue outline-none text-sm bg-gray-50"
+                placeholder="url-friendly-slug"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Auto-generated from title. URL: /blog/{formData.slug || 'your-slug'}
+              </p>
             </div>
 
             {/* Author */}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { sendEmailNotification } from '../utils/emailUtils';
 
 const JobApply = () => {
   const { id } = useParams();
@@ -116,6 +117,22 @@ const JobApply = () => {
           throw error;
         }
       }
+      
+      // Send email notification
+      const emailTitle = `New Job Application - ${job.title}`;
+      const emailBody = `A new job application has been submitted:\n\n` +
+        `Job Title: ${job.title}\n` +
+        `Company: ${job.show_company !== false && job.company ? job.company : 'Not specified'}\n` +
+        `Location: ${job.location}\n` +
+        `Applicant Name: ${form.full_name}\n` +
+        `Applicant Email: ${form.email}\n` +
+        `Applicant Location: ${form.location || 'Not specified'}\n` +
+        `Experience Level: ${form.experience_level || 'Not specified'}\n` +
+        `Cover Letter: ${form.cover_letter || 'None provided'}\n` +
+        `CV: ${cvFile.name}`;
+      
+      await sendEmailNotification(emailTitle, emailBody);
+      
       setSuccess(true);
       setTimeout(() => navigate('/jobs'), 1500);
     } catch (err) {

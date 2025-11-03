@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './components/AuthContext';
 import { AdminProvider } from './components/AdminContext';
 import Header from './components/Header';
+import CookieConsent from './components/CookieConsent';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
 import Home from './pages/Home';
@@ -12,6 +13,9 @@ import Blog from './pages/Blog';
 import Employers from './pages/Employers';
 import Candidates from './pages/Candidates';
 import About from './pages/About';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Cookies from './pages/Cookies';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -132,7 +136,7 @@ function App() {
               path="/admin" 
               element={
                 <AdminProtectedRoute>
-                  <AdminDashboard activeTab="dashboard" />
+                  <Navigate to="/admin/edit-pages" replace />
                 </AdminProtectedRoute>
               } 
             />
@@ -167,6 +171,7 @@ function App() {
               element={
                 <div className="App">
                   <Header />
+                  <CookieConsent />
                   <main className="pt-14">
                     <Routes>
                       <Route path="/" element={<Home />} />
@@ -175,10 +180,15 @@ function App() {
                       <Route path="/jobs/view/:id" element={<JobView />} />
                       <Route path="/jobs/apply/:id" element={<JobApply />} />
                       <Route path="/blogs" element={<Blog />} />
+                      <Route path="/blog/:slug" element={<Blog />} />
+                      {/* Legacy route support for backwards compatibility */}
                       <Route path="/blogs/:id" element={<Blog />} />
                       <Route path="/employers" element={<Employers />} />
                       <Route path="/candidates" element={<Candidates />} />
                       <Route path="/about" element={<About />} />
+                      <Route path="/terms" element={<Terms />} />
+                      <Route path="/privacy" element={<Privacy />} />
+                      <Route path="/cookies" element={<Cookies />} />
                       <Route path="/login" element={<Login />} />
                       <Route path="/register" element={<Register />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />

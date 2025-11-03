@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
+import { useSEO } from '../hooks/useSEO';
 
 // Custom hook for scroll animations
 const useScrollAnimation = () => {
@@ -100,6 +101,12 @@ const About = () => {
   useScrollAnimation();
   const [content, setContent] = useState(null);
 
+  // Set SEO metadata
+  useSEO(
+    'About Us',
+    'Learn about JCR Pharma\'s mission to transform life sciences recruitment. Meet our leadership team, discover our values of excellence, integrity, and expertise, and see how we connect top talent with pharmaceutical and biotech companies across the UK, USA, and Europe.'
+  );
+
   // Newsletter subscription state
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [newsletterLoading, setNewsletterLoading] = useState(false);
@@ -123,7 +130,7 @@ const About = () => {
       mathy: {
         name: "Mathy Bekele",
         title: "Principal Consultant",
-        bio: "With five years of specialised recruitment experience in the biometrics space within pharmaceuticals, Mathy began her career at Phaidon International before joining Veramed as an internal recruiter. During her three years at Veramed, she worked directly with statisticians and programmers, making numerous placements across biotech, pharmaceutical, and CRO organisations. Her deep understanding of the industry was further strengthened through attending key conferences like PhUSE in London. Mathy joined JCR in 2024, drawn by the company's people-first ethos and commitment to building long-term relationships. Based in Vienna, Austria, she focuses on providing exceptional service while supporting the biotech and pharmaceutical communities."
+        bio: "With five years of specialised recruitment experience in the biometrics space within pharmaceuticals, Mathy began his career at Phaidon International before joining Veramed as an internal recruiter. During his three years at Veramed, he worked directly with statisticians and programmers, making numerous placements across biotech, pharmaceutical, and CRO organisations. His deep understanding of the industry was further strengthened through attending key conferences like PhUSE in London. Mathy joined JCR in 2024, drawn by the company's people-first ethos and commitment to building long-term relationships. Based in Vienna, Austria, he focuses on providing exceptional service while supporting the biotech and pharmaceutical communities."
       }
     },
     values: {
@@ -384,14 +391,9 @@ const About = () => {
                   {pageContent.team.james.bio}
                 </p>
                 <div className="flex justify-center space-x-4">
-                  <a href="#" className="text-gray-400 hover:text-brand-blue transition-colors">
+                  <a href="https://www.linkedin.com/in/james-carpenter01/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-brand-blue transition-colors">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                    </svg>
-                  </a>
-                  <a href="#" className="text-gray-400 hover:text-brand-blue transition-colors">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                     </svg>
                   </a>
                 </div>
@@ -434,14 +436,9 @@ const About = () => {
                   {pageContent.team.mathy.bio}
                 </p>
                 <div className="flex justify-center space-x-4">
-                  <a href="#" className="text-gray-400 hover:text-brand-blue transition-colors">
+                  <a href="https://www.linkedin.com/in/mathy-bekele-939361134/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-brand-blue transition-colors">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                    </svg>
-                  </a>
-                  <a href="#" className="text-gray-400 hover:text-brand-blue transition-colors">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                     </svg>
                   </a>
                 </div>
@@ -614,11 +611,7 @@ const About = () => {
                   <img 
                     src="jcr_white_transparent.png" 
                     alt="JCR Pharma" 
-                    className="h-12 w-auto object-cover"
-                    style={{
-                      clipPath: 'inset(20% 0 20% 0)',
-                      transform: 'scaleY(1.67)'
-                    }}
+                    className="h-12 w-auto object-contain"
                   />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">

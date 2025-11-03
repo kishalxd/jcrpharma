@@ -1,6 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
+// Utility function to compress and convert image to base64
+const compressImageToBase64 = (file, maxWidth = 300, maxHeight = 300, quality = 0.8) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        // Calculate new dimensions
+        if (width > height) {
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = (width * maxHeight) / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert to base64 with compression
+        const base64 = canvas.toDataURL('image/jpeg', quality);
+        resolve(base64);
+      };
+      img.onerror = (error) => reject(error);
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 const TestimonialsManager = () => {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +96,7 @@ const TestimonialsManager = () => {
     }));
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
       // Validate file type
@@ -63,7 +105,7 @@ const TestimonialsManager = () => {
         return;
       }
       
-      // Validate file size (max 5MB)
+      // Validate file size (max 5MB before compression)
       if (file.size > 5 * 1024 * 1024) {
         alert('Image size must be less than 5MB');
         return;
@@ -71,66 +113,46 @@ const TestimonialsManager = () => {
 
       setImageFile(file);
       
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
+      // Compress and create preview
+      try {
+        const compressedBase64 = await compressImageToBase64(file, 300, 300, 0.8);
+        setImagePreview(compressedBase64);
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        // Fallback to original file
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setImagePreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
-  const uploadImage = async (file) => {
+  const processImageToBase64 = async (file) => {
     if (!file) return null;
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = fileName;
-
-    const { data, error } = await supabase.storage
-      .from('testimonial-images')
-      .upload(filePath, file);
-
-    if (error) throw error;
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('testimonial-images')
-      .getPublicUrl(filePath);
-
-    return {
-      url: publicUrl,
-      name: file.name,
-      path: filePath
-    };
-  };
-
-  const deleteImage = async (imagePath) => {
-    if (!imagePath) return;
-
     try {
-      const { error } = await supabase.storage
-        .from('testimonial-images')
-        .remove([imagePath]);
-
-      if (error) {
-        console.error('Error deleting image:', error);
-      }
+      // Compress image to base64 (max 300x300px, quality 0.8)
+      const base64 = await compressImageToBase64(file, 300, 300, 0.8);
+      return base64;
     } catch (error) {
-      console.error('Error deleting image:', error);
+      console.error('Error processing image:', error);
+      throw error;
     }
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUploading(true);
 
     try {
-      let imageData = null;
+      let imageBase64 = null;
       
-      // Upload new image if provided
+      // Process image to base64 if provided
       if (imageFile) {
-        imageData = await uploadImage(imageFile);
+        imageBase64 = await processImageToBase64(imageFile);
       }
 
       const testimonialData = {
@@ -138,10 +160,10 @@ const TestimonialsManager = () => {
         display_order: parseInt(formData.display_order) || 0
       };
 
-      // Add image data if uploaded
-      if (imageData) {
-        testimonialData.image_url = imageData.url;
-        testimonialData.image_name = imageData.name;
+      // Add base64 image data if processed
+      if (imageBase64) {
+        testimonialData.image_base64 = imageBase64;
+        testimonialData.image_name = imageFile.name;
       }
 
       if (editingTestimonial) {
@@ -152,12 +174,6 @@ const TestimonialsManager = () => {
           .eq('id', editingTestimonial.id);
 
         if (error) throw error;
-
-        // Delete old image if a new one was uploaded
-        if (imageData && editingTestimonial.image_url) {
-          const oldImagePath = editingTestimonial.image_url.split('/').pop();
-          await deleteImage(oldImagePath);
-        }
       } else {
         // Create new testimonial
         const { error } = await supabase
@@ -189,7 +205,8 @@ const TestimonialsManager = () => {
       status: testimonial.status,
       display_order: testimonial.display_order
     });
-    setImagePreview(testimonial.image_url);
+    // Use base64 image
+    setImagePreview(testimonial.image_base64);
     setShowForm(true);
   };
 
@@ -205,12 +222,6 @@ const TestimonialsManager = () => {
         .eq('id', testimonial.id);
 
       if (error) throw error;
-
-      // Delete associated image
-      if (testimonial.image_url) {
-        const imagePath = testimonial.image_url.split('/').pop();
-        await deleteImage(imagePath);
-      }
 
       fetchTestimonials();
       alert('Testimonial deleted successfully!');
@@ -558,9 +569,9 @@ const TestimonialsManager = () => {
               filteredTestimonials.map((testimonial) => (
                 <tr key={testimonial.id} className="hover:bg-gray-50 transition-colors border-t border-gray-100">
                   <td className="py-4 px-6">
-                    {testimonial.image_url ? (
+                    {testimonial.image_base64 ? (
                       <img
-                        src={testimonial.image_url}
+                        src={testimonial.image_base64}
                         alt={testimonial.name}
                         className="w-12 h-12 object-cover rounded-full border border-gray-300"
                       />

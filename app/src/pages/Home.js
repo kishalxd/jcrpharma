@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAdmin } from '../components/AdminContext';
+import { useSEO } from '../hooks/useSEO';
 
 // Custom hook for scroll animations
 const useScrollAnimation = () => {
@@ -428,11 +429,11 @@ const TestimonialsCarousel = ({ testimonials = [], editMode, updateTestimonial, 
 
         {/* Author Info */}
         <div className="flex flex-col items-center">
-          {/* Avatar - only show if image_url exists */}
-          {currentTestimonial.image_url && (
+          {/* Avatar - only show if image_base64 exists */}
+          {currentTestimonial.image_base64 && (
             <div className="w-16 h-16 bg-white rounded-full mb-4 flex items-center justify-center overflow-hidden">
               <img 
-                src={currentTestimonial.image_url} 
+                src={currentTestimonial.image_base64} 
                 alt={currentTestimonial.author}
                 className="w-full h-full object-cover"
               />
@@ -708,7 +709,7 @@ const Home = () => {
         position: testimonial.position || '',
         company: testimonial.company || '',
         avatar: testimonial.name.split(' ').map(n => n[0]).join('').toUpperCase(), // Generate initials
-        image_url: testimonial.image_url || null // Add image URL for display
+        image_base64: testimonial.image_base64 || null
       }));
 
       setTestimonials(transformedTestimonials);
@@ -729,6 +730,12 @@ const Home = () => {
   useScrollAnimation();
 
   const pageContent = content || defaultContent;
+
+  // Set SEO metadata
+  useSEO(
+    'Home',
+    'Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe in biostatistics, clinical data management, and data science.'
+  );
 
   const updateTestimonial = (id, field, value) => {
     setContent(prev => {
@@ -1692,7 +1699,7 @@ const Home = () => {
               <div className="lg:col-span-1">
                 <div className="mb-8">
                   <img 
-                    src="/logo_transparent.JPG" 
+                    src="/jcr_white_transparent.png" 
                     alt="JCR Pharma" 
                     className="h-12 w-auto object-contain"
                   />

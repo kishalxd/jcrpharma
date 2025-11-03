@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useSEO } from '../hooks/useSEO';
 
 const Jobs = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -23,6 +24,12 @@ const Jobs = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [jobsPerPage] = useState(10);
   const navigate = useNavigate();
+
+  // Set SEO metadata
+  useSEO(
+    'Jobs',
+    'Browse the latest life sciences and biometrics job opportunities. Find biostatistics, clinical data management, data science, bioinformatics, and medical affairs roles at top pharmaceutical and biotech companies across UK, USA, and Europe. Search, filter, and apply for your next career move.'
+  );
 
   const popularSearches = [
     'Biostatistician', 'Clinical Data Manager', 'SAS Programmer', 'Bioinformatics',

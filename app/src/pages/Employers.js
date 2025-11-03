@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useSEO } from '../hooks/useSEO';
 
 // Add custom CSS for animations
 const customStyles = `
@@ -158,9 +159,9 @@ const TestimonialsCarousel = ({ testimonials = [] }) => {
         <div className="flex flex-col items-center">
           {/* Avatar */}
           <div className="w-16 h-16 bg-brand-blue/20 rounded-full mb-4 flex items-center justify-center overflow-hidden">
-            {currentTestimonial.image_url ? (
+            {currentTestimonial.image_base64 ? (
               <img 
-                src={currentTestimonial.image_url} 
+                src={currentTestimonial.image_base64} 
                 alt={currentTestimonial.author}
                 className="w-full h-full object-cover"
               />
@@ -201,11 +202,232 @@ const TestimonialsCarousel = ({ testimonials = [] }) => {
   );
 };
 
+// Process Steps Carousel Component
+const ProcessCarousel = ({ steps = [], isVisible = false }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState(null);
+  const carouselRef = useRef(null);
+
+  // Auto-slide functionality
+  useEffect(() => {
+    if (steps.length === 0 || isPaused) return;
+    
+    const interval = setInterval(() => {
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % steps.length);
+    }, 5000); // 5 seconds
+
+    return () => clearInterval(interval);
+  }, [steps.length, isPaused]);
+
+  // Resume auto-slide after user interaction
+  useEffect(() => {
+    if (isPaused) {
+      const timer = setTimeout(() => {
+        setIsPaused(false);
+      }, 5000); // Resume after 5 seconds of no interaction
+      return () => clearTimeout(timer);
+    }
+  }, [isPaused, currentIndex]);
+
+  if (!steps || steps.length === 0) {
+    return null;
+  }
+
+  const nextStep = () => {
+    setIsPaused(true);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % steps.length);
+  };
+
+  const prevStep = () => {
+    setIsPaused(true);
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + steps.length) % steps.length);
+  };
+
+  const goToStep = (index) => {
+    setIsPaused(true);
+    setCurrentIndex(index);
+  };
+
+  // Touch handlers for mobile
+  const handleTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextStep();
+    } else if (isRightSwipe) {
+      prevStep();
+    }
+
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+
+  // Mouse handlers for desktop drag
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart(e.clientX);
+    e.preventDefault();
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging || !dragStart) return;
+    // Prevent text selection while dragging
+    e.preventDefault();
+  };
+
+  const handleMouseUp = (e) => {
+    if (!isDragging || !dragStart) return;
+
+    const distance = dragStart - e.clientX;
+    const isLeftDrag = distance > 50;
+    const isRightDrag = distance < -50;
+
+    if (isLeftDrag) {
+      nextStep();
+    } else if (isRightDrag) {
+      prevStep();
+    }
+
+    setIsDragging(false);
+    setDragStart(null);
+  };
+
+  // Prevent default drag behavior
+  const handleDragStart = (e) => {
+    e.preventDefault();
+  };
+
+  const currentStep = steps[currentIndex] || steps[0];
+
+  return (
+    <div 
+      ref={carouselRef}
+      className={`max-w-4xl mx-auto relative transition-all duration-1000 delay-300 ${
+        isVisible 
+          ? 'opacity-100 translate-y-0' 
+          : 'opacity-0 translate-y-8'
+      } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+      onDragStart={handleDragStart}
+    >
+      <div className="text-center">
+        {/* Step Card */}
+        <div className="relative select-none">
+          {/* Left Arrow */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              prevStep();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            className="absolute left-0 top-1/2 transform -translate-y-1/2 -translate-x-4 md:-translate-x-16 w-10 h-10 md:w-12 md:h-12 bg-gray-200 hover:bg-gray-300 rounded-full shadow-md flex items-center justify-center transition-all duration-300 z-10"
+            aria-label="Previous step"
+          >
+            <svg className="w-5 h-5 md:w-6 md:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Right Arrow */}
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              nextStep();
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-4 md:translate-x-16 w-10 h-10 md:w-12 md:h-12 bg-gray-200 hover:bg-gray-300 rounded-full shadow-md flex items-center justify-center transition-all duration-300 z-10"
+            aria-label="Next step"
+          >
+            <svg className="w-5 h-5 md:w-6 md:h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          {/* Step Content */}
+          <div className="p-6 md:p-8 mx-4 md:mx-16">
+            {/* Step Number */}
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-2xl md:text-3xl">
+                {currentStep.number}
+              </div>
+            </div>
+
+            {/* Step Title */}
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-4">
+              {currentStep.title}
+            </h3>
+
+            {/* Step Description */}
+            <p className="text-gray-600 mb-4 leading-relaxed text-base md:text-lg">
+              {currentStep.description}
+            </p>
+
+            {/* Duration */}
+            <div className="text-brand-blue font-medium text-sm md:text-base">
+              Duration: {currentStep.duration}
+            </div>
+          </div>
+        </div>
+
+        {/* Pagination Dots */}
+        <div className="flex justify-center space-x-2 mt-8">
+          {steps.map((_, index) => (
+            <button
+              key={index}
+              onClick={(e) => {
+                e.stopPropagation();
+                goToStep(index);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              className={`w-2 h-2 rounded-full transition-colors ${
+                index === currentIndex ? 'bg-brand-blue' : 'bg-gray-300 hover:bg-gray-400'
+              }`}
+              aria-label={`Go to step ${index + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Employers = () => {
   const navigate = useNavigate();
   const [activeQuestion, setActiveQuestion] = useState(null);
   const [testimonials, setTestimonials] = useState([]);
   const [content, setContent] = useState(null);
+
+  // Set SEO metadata
+  useSEO(
+    'For Employers',
+    'Partner with JCR Pharma for expert life sciences recruitment. We help pharmaceutical, biotech, and CRO companies find top talent in biostatistics, clinical data management, data science, and biometrics. Quality over quantity approach with consultative recruitment services across UK, USA, and Europe.'
+  );
 
   // Animation refs
   const [heroRef, heroVisible] = useScrollAnimation(0.2);
@@ -216,34 +438,51 @@ const Employers = () => {
   const [ctaRef, ctaVisible] = useScrollAnimation(0.2);
   const [faqRef, faqVisible] = useScrollAnimation(0.2);
 
-  // Timeline step animation states
-  const [timelineSteps, setTimelineSteps] = useState({
-    line: false,
-    step1: false,
-    step2: false,
-    step3: false,
-    step4: false,
-    step5: false,
-    step6: false,
-    step7: false
-  });
-
-  // Trigger sequential timeline animations
-  useEffect(() => {
-    if (processVisible) {
-      // Start the line animation
-      setTimeout(() => setTimelineSteps(prev => ({ ...prev, line: true })), 200);
-      
-      // Sequential step animations (faster timing)
-      setTimeout(() => setTimelineSteps(prev => ({ ...prev, step1: true })), 600);
-      setTimeout(() => setTimelineSteps(prev => ({ ...prev, step2: true })), 1000);
-      setTimeout(() => setTimelineSteps(prev => ({ ...prev, step3: true })), 1400);
-      setTimeout(() => setTimelineSteps(prev => ({ ...prev, step4: true })), 1800);
-      setTimeout(() => setTimelineSteps(prev => ({ ...prev, step5: true })), 2200);
-      setTimeout(() => setTimelineSteps(prev => ({ ...prev, step6: true })), 2600);
-      setTimeout(() => setTimelineSteps(prev => ({ ...prev, step7: true })), 3000);
+  // Process steps data
+  const processSteps = [
+    {
+      number: 1,
+      title: 'Understand You First',
+      description: 'We build a deep understanding of your business culture, goals, values, and growth objectives.',
+      duration: '1-2 days'
+    },
+    {
+      number: 2,
+      title: 'Define Your Ideal Candidate',
+      description: 'We identify the perfect candidate profile including skills, personality traits, and target companies.',
+      duration: '1 day'
+    },
+    {
+      number: 3,
+      title: 'The Search',
+      description: 'Dual approach: searching our 10+ year database and proactive headhunting through multiple channels.',
+      duration: '3-5 days'
+    },
+    {
+      number: 4,
+      title: 'Candidate Shortlisting',
+      description: 'Rigorous screening process including initial calls, role presentation, and detailed information sharing.',
+      duration: '2-3 days'
+    },
+    {
+      number: 5,
+      title: 'Deep Pre-screening',
+      description: 'Comprehensive follow-up calls covering financial expectations, skills assessment, and detailed profiling.',
+      duration: '1-2 days'
+    },
+    {
+      number: 6,
+      title: 'Ongoing Collaboration',
+      description: 'Continuous support through weekly updates, interview coordination, and candidate preparation.',
+      duration: '1-2 weeks'
+    },
+    {
+      number: 7,
+      title: 'Closing the Offer',
+      description: 'Proactive management of obstacles, understanding candidate motivations, and strategic positioning.',
+      duration: '3-5 days'
     }
-  }, [processVisible]);
+  ];
 
   const toggleQuestion = (index) => {
     setActiveQuestion(activeQuestion === index ? null : index);
@@ -370,10 +609,10 @@ const Employers = () => {
         id: testimonial.id,
         quote: testimonial.text,
         author: testimonial.name,
-        position: '', // We don't have position in the database
-        company: '', // We don't have company in the database
+        position: testimonial.position || '', // Use position from database if available
+        company: testimonial.company || '', // Use company from database if available
         avatar: testimonial.name.split(' ').map(n => n[0]).join('').toUpperCase(), // Generate initials
-        image_url: testimonial.image_url // Add image URL for display
+        image_base64: testimonial.image_base64 || null
       }));
 
       setTestimonials(transformedTestimonials);
@@ -558,274 +797,8 @@ const Employers = () => {
             </p>
           </div>
 
-          {/* Horizontal Timeline */}
-          <div className="max-w-7xl mx-auto">
-            {/* Timeline Line with Circles */}
-            <div className={`relative mb-20 transition-all duration-1000 delay-200 ${
-              processVisible 
-                ? 'opacity-100 translate-y-0' 
-                : 'opacity-0 translate-y-8'
-            }`}>
-              {/* Horizontal connecting line */}
-              <div className={`absolute top-6 left-0 right-0 h-0.5 bg-gray-300 z-0 transition-all duration-1000 ${
-                timelineSteps.line ? 'scale-x-100' : 'scale-x-0'
-              }`} style={{ transformOrigin: 'left' }}></div>
-              
-              {/* Timeline circles */}
-              <div className="relative flex justify-between items-center z-10">
-                {/* Step 1 Circle */}
-                <div className={`relative transition-all duration-300 ${
-                  timelineSteps.step1 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-0'
-                }`}>
-                  <div className="w-12 h-12 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg border-4 border-white hover:scale-110 transition-transform duration-300">
-                    1
-                  </div>
-                  {/* Vertical line down */}
-                  <div className={`absolute left-1/2 top-12 w-0.5 h-16 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
-                    timelineSteps.step1 ? 'scale-y-100' : 'scale-y-0'
-                  }`} style={{ transformOrigin: 'top' }}></div>
-                </div>
-
-                {/* Step 2 Circle */}
-                <div className={`relative transition-all duration-300 ${
-                  timelineSteps.step2 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-0'
-                }`}>
-                  <div className="w-12 h-12 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg border-4 border-white hover:scale-110 transition-transform duration-300">
-                    2
-                  </div>
-                  {/* Vertical line down */}
-                  <div className={`absolute left-1/2 top-12 w-0.5 h-32 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
-                    timelineSteps.step2 ? 'scale-y-100' : 'scale-y-0'
-                  }`} style={{ transformOrigin: 'top' }}></div>
-                </div>
-
-                {/* Step 3 Circle */}
-                <div className={`relative transition-all duration-300 ${
-                  timelineSteps.step3 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-0'
-                }`}>
-                  <div className="w-12 h-12 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg border-4 border-white hover:scale-110 transition-transform duration-300">
-                    3
-                  </div>
-                  {/* Vertical line down */}
-                  <div className={`absolute left-1/2 top-12 w-0.5 h-48 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
-                    timelineSteps.step3 ? 'scale-y-100' : 'scale-y-0'
-                  }`} style={{ transformOrigin: 'top' }}></div>
-                </div>
-
-                {/* Step 4 Circle */}
-                <div className={`relative transition-all duration-300 ${
-                  timelineSteps.step4 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-0'
-                }`}>
-                  <div className="w-12 h-12 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg border-4 border-white hover:scale-110 transition-transform duration-300">
-                    4
-                  </div>
-                  {/* Vertical line down */}
-                  <div className={`absolute left-1/2 top-12 w-0.5 h-52 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
-                    timelineSteps.step4 ? 'scale-y-100' : 'scale-y-0'
-                  }`} style={{ transformOrigin: 'top' }}></div>
-                </div>
-
-                {/* Step 5 Circle */}
-                <div className={`relative transition-all duration-300 ${
-                  timelineSteps.step5 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-0'
-                }`}>
-                  <div className="w-12 h-12 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg border-4 border-white hover:scale-110 transition-transform duration-300">
-                    5
-                  </div>
-                  {/* Vertical line down */}
-                  <div className={`absolute left-1/2 top-12 w-0.5 h-48 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
-                    timelineSteps.step5 ? 'scale-y-100' : 'scale-y-0'
-                  }`} style={{ transformOrigin: 'top' }}></div>
-                </div>
-
-                {/* Step 6 Circle */}
-                <div className={`relative transition-all duration-300 ${
-                  timelineSteps.step6 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-0'
-                }`}>
-                  <div className="w-12 h-12 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg border-4 border-white hover:scale-110 transition-transform duration-300">
-                    6
-                  </div>
-                  {/* Vertical line down */}
-                  <div className={`absolute left-1/2 top-12 w-0.5 h-32 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
-                    timelineSteps.step6 ? 'scale-y-100' : 'scale-y-0'
-                  }`} style={{ transformOrigin: 'top' }}></div>
-                </div>
-
-                {/* Step 7 Circle */}
-                <div className={`relative transition-all duration-300 ${
-                  timelineSteps.step7 
-                    ? 'opacity-100 scale-100' 
-                    : 'opacity-0 scale-0'
-                }`}>
-                  <div className="w-12 h-12 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg border-4 border-white hover:scale-110 transition-transform duration-300">
-                    7
-                  </div>
-                  {/* Vertical line down */}
-                  <div className={`absolute left-1/2 top-12 w-0.5 h-16 bg-gray-300 transform -translate-x-1/2 transition-all duration-250 delay-100 ${
-                    timelineSteps.step7 ? 'scale-y-100' : 'scale-y-0'
-                  }`} style={{ transformOrigin: 'top' }}></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Content Cards at Different Levels */}
-            <div className="relative">
-              {/* Step 1 Content - Level 1 */}
-              <div 
-                className={`absolute transition-all duration-400 delay-200 ${
-                  timelineSteps.step1 
-                    ? 'opacity-100 translate-y-0' 
-                    : 'opacity-0 translate-y-8'
-                }`}
-                style={{ left: '0%', top: '0px', width: '13%' }}
-              >
-                <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2">Understand You First</h3>
-                  <p className="text-xs text-gray-600 mb-2 leading-relaxed">
-                    We build a deep understanding of your business culture, goals, values, and growth objectives.
-                  </p>
-                  <div className="text-xs text-brand-blue font-medium">
-                    Duration: 1-2 days
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 2 Content - Level 2 */}
-              <div 
-                className={`absolute transition-all duration-400 delay-200 ${
-                  timelineSteps.step2 
-                    ? 'opacity-100 translate-y-0' 
-                    : 'opacity-0 translate-y-8'
-                }`}
-                style={{ left: '14.5%', top: '80px', width: '13%' }}
-              >
-                <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2">Define Your Ideal Candidate</h3>
-                  <p className="text-xs text-gray-600 mb-2 leading-relaxed">
-                    We identify the perfect candidate profile including skills, personality traits, and target companies.
-                  </p>
-                  <div className="text-xs text-brand-blue font-medium">
-                    Duration: 1 day
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 3 Content - Level 3 */}
-              <div 
-                className={`absolute transition-all duration-400 delay-200 ${
-                  timelineSteps.step3 
-                    ? 'opacity-100 translate-y-0' 
-                    : 'opacity-0 translate-y-8'
-                }`}
-                style={{ left: '29%', top: '160px', width: '13%' }}
-              >
-                <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2">The Search</h3>
-                  <p className="text-xs text-gray-600 mb-2 leading-relaxed">
-                    Dual approach: searching our 10+ year database and proactive headhunting through multiple channels.
-                  </p>
-                  <div className="text-xs text-brand-blue font-medium">
-                    Duration: 3-5 days
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 4 Content - Level 4 (Deepest) */}
-              <div 
-                className={`absolute transition-all duration-400 delay-200 ${
-                  timelineSteps.step4 
-                    ? 'opacity-100 translate-y-0' 
-                    : 'opacity-0 translate-y-8'
-                }`}
-                style={{ left: '43.5%', top: '200px', width: '13%' }}
-              >
-                <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2">Candidate Shortlisting</h3>
-                  <p className="text-xs text-gray-600 mb-2 leading-relaxed">
-                    Rigorous screening process including initial calls, role presentation, and detailed information sharing.
-                  </p>
-                  <div className="text-xs text-brand-blue font-medium">
-                    Duration: 2-3 days
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 5 Content - Level 3 */}
-              <div 
-                className={`absolute transition-all duration-400 delay-200 ${
-                  timelineSteps.step5 
-                    ? 'opacity-100 translate-y-0' 
-                    : 'opacity-0 translate-y-8'
-                }`}
-                style={{ left: '58%', top: '160px', width: '13%' }}
-              >
-                <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2">Deep Pre-screening</h3>
-                  <p className="text-xs text-gray-600 mb-2 leading-relaxed">
-                    Comprehensive follow-up calls covering financial expectations, skills assessment, and detailed profiling.
-                  </p>
-                  <div className="text-xs text-brand-blue font-medium">
-                    Duration: 1-2 days
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 6 Content - Level 2 */}
-              <div 
-                className={`absolute transition-all duration-400 delay-200 ${
-                  timelineSteps.step6 
-                    ? 'opacity-100 translate-y-0' 
-                    : 'opacity-0 translate-y-8'
-                }`}
-                style={{ left: '72.5%', top: '80px', width: '13%' }}
-              >
-                <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2">Ongoing Collaboration</h3>
-                  <p className="text-xs text-gray-600 mb-2 leading-relaxed">
-                    Continuous support through weekly updates, interview coordination, and candidate preparation.
-                  </p>
-                  <div className="text-xs text-brand-blue font-medium">
-                    Duration: 1-2 weeks
-                  </div>
-                </div>
-              </div>
-
-              {/* Step 7 Content - Level 1 */}
-              <div 
-                className={`absolute transition-all duration-400 delay-200 ${
-                  timelineSteps.step7 
-                    ? 'opacity-100 translate-y-0' 
-                    : 'opacity-0 translate-y-8'
-                }`}
-                style={{ left: '87%', top: '0px', width: '13%' }}
-              >
-                <div className="bg-white rounded-lg p-4 shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2">Closing the Offer</h3>
-                  <p className="text-xs text-gray-600 mb-2 leading-relaxed">
-                    Proactive management of obstacles, understanding candidate motivations, and strategic positioning.
-                  </p>
-                  <div className="text-xs text-brand-blue font-medium">
-                    Duration: 3-5 days
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Spacer to ensure content doesn't overlap */}
-            <div style={{ height: '320px' }}></div>
-          </div>
+          {/* Process Carousel */}
+          <ProcessCarousel steps={processSteps} isVisible={processVisible} />
         </div>
       </section>
 
@@ -1060,11 +1033,7 @@ const Employers = () => {
                   <img 
                     src="/jcr_white_transparent.png" 
                     alt="JCR Pharma" 
-                    className="h-12 w-auto object-cover"
-                    style={{
-                      clipPath: 'inset(20% 0 20% 0)',
-                      transform: 'scaleY(1.67)'
-                    }}
+                    className="h-12 w-auto object-contain"
                   />
                 </div>
                 <p className="text-gray-300 leading-relaxed text-sm">
@@ -1072,7 +1041,7 @@ const Employers = () => {
                 </p>
               </div>
 
-              {/* Specializations */}
+              {/* Specialisations */}
               <div>
                 <h4 className="text-white font-medium mb-6">Specialisations</h4>
                 <ul className="space-y-4">

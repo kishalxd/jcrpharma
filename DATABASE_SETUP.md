@@ -261,12 +261,25 @@ ALTER TABLE public.testimonials DISABLE ROW LEVEL SECURITY;
 | `text` | TEXT | Testimonial text | NOT NULL |
 | `position` | TEXT | Person's job position/title | Optional |
 | `company` | TEXT | Person's company name | Optional |
-| `image_url` | TEXT | Supabase storage URL for photo | Optional |
+| `image_url` | TEXT | Supabase storage URL for photo (legacy, kept for backward compatibility) | Optional |
+| `image_base64` | TEXT | Base64-encoded compressed image (preferred for faster loading) | Optional |
 | `image_name` | TEXT | Original image filename | Optional |
 | `status` | TEXT | Testimonial status | Default: 'active', CHECK constraint |
 | `display_order` | INTEGER | Display order for sorting | Default: 0 |
 | `created_at` | TIMESTAMP | Creation timestamp | Auto-generated |
 | `updated_at` | TIMESTAMP | Last update timestamp | Auto-generated |
+
+**Note:** Images are now stored as base64 strings directly in the database for faster loading. Images are automatically compressed to max 300x300px with 80% quality before storage. The `image_url` column is kept for backward compatibility with existing testimonials.
+
+#### Adding the image_base64 Column (Migration)
+
+If you already have a `testimonials` table without the `image_base64` column, run this SQL to add it:
+
+```sql
+-- Add image_base64 column to testimonials table
+ALTER TABLE public.testimonials 
+ADD COLUMN IF NOT EXISTS image_base64 TEXT;
+```
 
 ## File Storage Setup
 

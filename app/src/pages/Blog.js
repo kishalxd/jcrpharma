@@ -1,29 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { generateImageAltText } from '../utils/blogUtils';
+import { useSEO } from '../hooks/useSEO';
 
 const Blog = () => {
-  const { id } = useParams();
+  const { slug } = useParams();
   const navigate = useNavigate();
   const [blogs, setBlogs] = useState([]);
   const [selectedBlog, setSelectedBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Helper function to strip HTML tags for meta descriptions
+  const stripHTML = (html) => {
+    if (!html) return '';
+    const tmp = document.createElement('DIV');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
+  };
+
+  // Helper function to truncate text for meta descriptions
+  const truncateText = (text, maxLength = 160) => {
+    if (!text) return '';
+    const stripped = stripHTML(text);
+    if (stripped.length <= maxLength) return stripped;
+    return stripped.substring(0, maxLength).trim() + '...';
+  };
+
+  // Get SEO metadata based on current state
+  const getSEOData = () => {
+    if (selectedBlog) {
+      // Individual blog post SEO
+      const metaDescription = selectedBlog.excerpt 
+        ? selectedBlog.excerpt.substring(0, 160) + (selectedBlog.excerpt.length > 160 ? '...' : '')
+        : truncateText(selectedBlog.content || '', 160);
+      
+      return {
+        title: selectedBlog.title,
+        description: metaDescription || 'Read insights and perspectives on life sciences recruitment and pharmaceutical industry trends from JCR Pharma.'
+      };
+    }
+    
+    // Blog list page SEO
+    return {
+      title: 'Insights & Perspectives',
+      description: 'Explore expert insights and perspectives on life sciences recruitment, biometrics, biostatistics, clinical data management, and pharmaceutical industry trends. Stay informed with JCR Pharma\'s blog covering career advice, industry news, and recruitment expertise.'
+    };
+  };
+
+  const seoData = getSEOData();
+
+  // SEO metadata - updates dynamically based on selectedBlog state
+  useSEO(seoData.title, seoData.description);
+
   useEffect(() => {
-    if (id) {
-      fetchSingleBlog(id);
+    if (slug) {
+      fetchSingleBlog(slug);
     } else {
+      // Clear selected blog when navigating back to list
+      setSelectedBlog(null);
       fetchBlogs();
     }
-  }, [id]);
+  }, [slug]);
 
   const fetchBlogs = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('blogs')
-        .select('id, title, excerpt, author, cover_image, created_at, is_featured, feature_type, feature_order')
+        .select('id, slug, title, excerpt, author, cover_image, created_at, is_featured, feature_type, feature_order')
         .eq('is_archived', false) // Only show published blogs
         .order('created_at', { ascending: false });
 
@@ -37,15 +83,24 @@ const Blog = () => {
     }
   };
 
-  const fetchSingleBlog = async (blogId) => {
+  const fetchSingleBlog = async (blogSlug) => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      // Try fetching by slug first, fallback to ID for backwards compatibility
+      let query = supabase
         .from('blogs')
-        .select('id, title, content, excerpt, author, cover_image, created_at')
-        .eq('id', blogId)
-        .eq('is_archived', false)
-        .single();
+        .select('id, slug, title, content, excerpt, author, cover_image, created_at')
+        .eq('is_archived', false);
+      
+      // Check if slug looks like a UUID, if so query by ID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(blogSlug)) {
+        query = query.eq('id', blogSlug);
+      } else {
+        query = query.eq('slug', blogSlug);
+      }
+      
+      const { data, error } = await query.single();
 
       if (error) throw error;
       setSelectedBlog(data);
@@ -65,11 +120,13 @@ const Blog = () => {
     });
   };
 
-  const handleBlogClick = (blogId) => {
-    navigate(`/blogs/${blogId}`);
+  const handleBlogClick = (blog) => {
+    const blogSlug = blog.slug || blog.id;
+    navigate(`/blog/${blogSlug}`);
   };
 
   const handleBackToBlogs = () => {
+    setSelectedBlog(null);
     navigate('/blogs');
   };
 
@@ -102,7 +159,7 @@ const Blog = () => {
         {mainBlog && (
           <div className="lg:col-span-2">
             <article
-              onClick={() => handleBlogClick(mainBlog.id)}
+              onClick={() => handleBlogClick(mainBlog)}
               className="cursor-pointer group bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden h-full"
             >
               {/* Cover Image */}
@@ -110,8 +167,9 @@ const Blog = () => {
                 <div className="aspect-video w-full overflow-hidden">
                   <img
                     src={mainBlog.cover_image}
-                    alt={mainBlog.title}
+                    alt={generateImageAltText(mainBlog.title)}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
                   />
                 </div>
               ) : (
@@ -149,7 +207,7 @@ const Blog = () => {
             {subBlogs.slice(0, 3).map((blog) => (
               <article
                 key={blog.id}
-                onClick={() => handleBlogClick(blog.id)}
+                onClick={() => handleBlogClick(blog)}
                 className="cursor-pointer group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
               >
                 {/* Cover Image */}
@@ -157,8 +215,9 @@ const Blog = () => {
                   <div className="aspect-video w-full overflow-hidden">
                     <img
                       src={blog.cover_image}
-                      alt={blog.title}
+                      alt={generateImageAltText(blog.title)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
                     />
                   </div>
                 ) : (
@@ -255,8 +314,8 @@ const Blog = () => {
   );
 
   if (loading) {
-    // Show skeleton for single blog if we have an ID
-    if (id) {
+    // Show skeleton for single blog if we have a slug
+    if (slug) {
       return <SingleBlogSkeleton />;
     }
     
@@ -314,16 +373,17 @@ const Blog = () => {
             <div className="aspect-video w-full overflow-hidden rounded-lg mb-8">
               <img
                 src={selectedBlog.cover_image}
-                alt={selectedBlog.title}
+                alt={generateImageAltText(selectedBlog.title)}
                 className="w-full h-full object-cover"
+                loading="eager"
               />
             </div>
           )}
 
           {/* Blog Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">{selectedBlog.title}</h1>
-            <div className="flex items-center space-x-4 text-gray-600">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-4 leading-tight">{selectedBlog.title}</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 text-gray-600 space-y-2 sm:space-y-0 text-sm sm:text-base">
               <span>By {selectedBlog.author || 'Admin'}</span>
               <span>•</span>
               <span>{formatDate(selectedBlog.created_at)}</span>
@@ -345,11 +405,11 @@ const Blog = () => {
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-12 md:mb-16">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-4">
             Insights & Perspectives
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-base md:text-lg text-gray-600 px-4">
             Life sciences recruitment expertise
           </p>
         </div>
@@ -392,7 +452,7 @@ const Blog = () => {
                     {regularBlogs.map((blog) => (
                       <article
                         key={blog.id}
-                        onClick={() => handleBlogClick(blog.id)}
+                        onClick={() => handleBlogClick(blog)}
                         className="cursor-pointer group bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
                       >
                         {/* Cover Image */}
@@ -400,8 +460,9 @@ const Blog = () => {
                           <div className="aspect-video w-full overflow-hidden">
                             <img
                               src={blog.cover_image}
-                              alt={blog.title}
+                              alt={generateImageAltText(blog.title)}
                               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              loading="lazy"
                             />
                           </div>
                         ) : (

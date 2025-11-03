@@ -253,8 +253,8 @@ const PageEditManager = ({ pageName, onSave }) => {
           subtitle: "Common questions about our specialised recruitment process and services",
           items: [
             {
-              question: "What specializations do you cover in life sciences recruitment?",
-              answer: "We specialize in biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies."
+              question: "What specialisations do you cover in life sciences recruitment?",
+              answer: "We specialise in biostatistics, clinical data management, statistical programming, data science, and bioinformatics. Our focus is on data-driven roles within pharmaceutical, biotechnology, and medical device companies."
             },
             {
               question: "How long does the typical recruitment process take?",

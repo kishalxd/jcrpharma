@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { sendEmailNotification } from '../utils/emailUtils';
 
 const CandidateApplication = () => {
   const navigate = useNavigate();
@@ -79,6 +80,19 @@ const CandidateApplication = () => {
       }
 
       console.log('Application submitted successfully:', data);
+      
+      // Send email notification
+      const emailTitle = 'New Candidate Application Submitted';
+      const emailBody = `A new candidate application has been submitted:\n\n` +
+        `Name: ${formData.fullName}\n` +
+        `Email: ${formData.email}\n` +
+        `Phone: ${formData.phone}\n` +
+        `Location: ${formData.location}\n` +
+        `Message: ${formData.message}\n` +
+        `${cvFileName ? `CV: ${cvFileName}` : 'No CV uploaded'}`;
+      
+      await sendEmailNotification(emailTitle, emailBody);
+      
       setSubmitMessage('Application submitted successfully! We\'ll be in touch soon.');
       
       // Reset form
