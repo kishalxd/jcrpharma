@@ -111,7 +111,7 @@ const PageEditManager = ({ pageName, onSave }) => {
         excellence: {
           title: "Measuring our recruitment\nexcellence",
           subtitle: "Quantifiable results that demonstrate our specialised approach",
-          stat1: { number: "3 Weeks", description: "Average time-to-hire" },
+          stat1: { number: "3", description: "Average time-to-hire" },
           stat2: { number: "95%", description: "Interview to offer success rate" },
           stat3: { number: "90%+", description: "Candidate retention after 1 year" }
         },

@@ -549,7 +549,7 @@ const Home = () => {
       title: "Measuring our recruitment\nexcellence",
       subtitle: "Quantifiable results that demonstrate our specialised approach",
       stat1: {
-        number: "3 Weeks",
+        number: "3",
         description: "Average time-to-hire"
       },
       stat2: {
@@ -626,25 +626,8 @@ const Home = () => {
   };
 
   const fetchContent = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('page_contents')
-        .select('content')
-        .eq('page_name', 'home')
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching content:', error);
-        setContent(defaultContent);
-      } else if (data) {
-        setContent(data.content);
-      } else {
-        setContent(defaultContent);
-      }
-    } catch (error) {
-      console.error('Error fetching content:', error);
-      setContent(defaultContent);
-    }
+    // Always use default content, don't read from database
+    setContent(defaultContent);
   };
 
   const fetchFeaturedJobs = async () => {
