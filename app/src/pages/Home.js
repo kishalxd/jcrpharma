@@ -717,7 +717,11 @@ const Home = () => {
   // Set SEO metadata
   useSEO(
     'Home',
-    'Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe in biostatistics, clinical data management, and data science.'
+    'Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe in biostatistics, clinical data management, and data science.',
+    {
+      image: '/jcr_logo.jpg',
+      twitterSite: '@JCRPharma'
+    }
   );
 
   const updateTestimonial = (id, field, value) => {
