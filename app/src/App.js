@@ -26,6 +26,7 @@ import EmployeeApplicationDetail from './pages/EmployeeApplicationDetail';
 import JobView from './pages/JobView';
 import JobApply from './pages/JobApply';
 
+
 // ScrollToTop component that scrolls to top on route change
 function ScrollToTop() {
   const { pathname } = useLocation();
