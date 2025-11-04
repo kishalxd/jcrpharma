@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './components/AuthContext';
 import { AdminProvider } from './components/AdminContext';
 import Header from './components/Header';
@@ -75,10 +76,11 @@ function StructuredDataWrapper({ children }) {
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <AuthProvider>
-        <AdminProvider>
+    <HelmetProvider>
+      <Router>
+        <ScrollToTop />
+        <AuthProvider>
+          <AdminProvider>
           <Routes>
             {/* Admin Routes */}
             <Route path="/admin-login" element={<AdminLogin />} />
@@ -247,9 +249,10 @@ function App() {
               } 
             />
           </Routes>
-        </AdminProvider>
-      </AuthProvider>
-    </Router>
+          </AdminProvider>
+        </AuthProvider>
+      </Router>
+    </HelmetProvider>
   );
 }
 

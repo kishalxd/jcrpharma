@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAdmin } from '../components/AdminContext';
-import { useSEO } from '../hooks/useSEO';
+import SEO from '../components/SEO';
 import Footer from '../components/Footer';
 
 // Custom hook for scroll animations
@@ -710,16 +710,6 @@ const Home = () => {
 
   const pageContent = content || defaultContent;
 
-  // Set SEO metadata
-  useSEO(
-    'Home',
-    'Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe in biostatistics, clinical data management, and data science.',
-    {
-      image: '/jcr_logo.jpg',
-      twitterSite: '@JCRPharma'
-    }
-  );
-
   const updateTestimonial = (id, field, value) => {
     setContent(prev => {
       const newContent = { ...prev };
@@ -845,8 +835,13 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      {/* Edit Mode Header */}
+    <>
+      <SEO 
+        title="Home"
+        description="Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe in biostatistics, clinical data management, and data science."
+      />
+      <div className="min-h-screen">
+        {/* Edit Mode Header */}
       {editMode && (
         <div className="fixed top-0 left-0 right-0 bg-black/90 backdrop-blur-sm z-50 px-6 py-4">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -1585,7 +1580,8 @@ const Home = () => {
       </section>
 
       <Footer />
-    </div>
+      </div>
+    </>
   );
 };
 

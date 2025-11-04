@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
-import { useSEO } from '../hooks/useSEO';
+import SEO from '../components/SEO';
 import Footer from '../components/Footer';
 
 // Custom hook for scroll animations
@@ -101,12 +101,6 @@ const AnimatedCounter = ({ targetValue, className = "" }) => {
 const About = () => {
   useScrollAnimation();
   const [content, setContent] = useState(null);
-
-  // Set SEO metadata
-  useSEO(
-    'About Us',
-    'Learn about JCR Pharma\'s mission to transform life sciences recruitment. Meet our leadership team, discover our values of excellence, integrity, and expertise, and see how we connect top talent with pharmaceutical and biotech companies across the UK, USA, and Europe.'
-  );
 
 
   // Default content (fallback)
@@ -226,7 +220,12 @@ const About = () => {
   const pageContent = content || defaultContent;
 
   return (
-    <div className="min-h-screen">
+    <>
+      <SEO 
+        title="About Us"
+        description="Learn about JCR Pharma's mission to transform life sciences recruitment. Meet our leadership team, discover our values of excellence, integrity, and expertise, and see how we connect top talent with pharmaceutical and biotech companies across the UK, USA, and Europe."
+      />
+      <div className="min-h-screen">
 
 
       {/* Mission Section */}
@@ -508,7 +507,8 @@ const About = () => {
       </section>
 
       <Footer />
-    </div>
+      </div>
+    </>
   );
 };
 

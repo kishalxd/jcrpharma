@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { generateImageAltText } from '../utils/blogUtils';
-import { useSEO } from '../hooks/useSEO';
+import SEO from '../components/SEO';
 import { StructuredData, generateArticleSchema } from '../components/StructuredData';
 
 const Blog = () => {
@@ -51,9 +51,6 @@ const Blog = () => {
   };
 
   const seoData = getSEOData();
-
-  // SEO metadata - updates dynamically based on selectedBlog state
-  useSEO(seoData.title, seoData.description);
 
   useEffect(() => {
     if (slug) {
@@ -356,10 +353,24 @@ const Blog = () => {
   // Single blog view
   if (selectedBlog) {
     const articleSchema = generateArticleSchema(selectedBlog);
+    const blogSlug = selectedBlog.slug || selectedBlog.id;
+    const baseUrl = process.env.REACT_APP_SITE_URL || 'https://jcrpharma.co.uk';
+    const blogUrl = `${baseUrl}/blog/${blogSlug}`;
+    const blogImage = selectedBlog.cover_image || `${baseUrl}/twitter_card.png`;
     
     return (
-      <div className="min-h-screen bg-white">
+      <>
+        <SEO 
+          title={seoData.title}
+          description={seoData.description}
+          options={{
+            url: blogUrl,
+            image: blogImage,
+            type: 'article'
+          }}
+        />
         <StructuredData data={articleSchema} />
+        <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Back button */}
           <button
@@ -400,12 +411,18 @@ const Blog = () => {
             dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
           />
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 
   // Blog list view
   return (
+    <>
+      <SEO 
+        title={seoData.title}
+        description={seoData.description}
+      />
     <div className="min-h-screen bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
@@ -504,6 +521,7 @@ const Blog = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

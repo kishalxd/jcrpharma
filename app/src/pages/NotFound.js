@@ -1,18 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSEO } from '../hooks/useSEO';
+import SEO from '../components/SEO';
 
 const NotFound = () => {
   const navigate = useNavigate();
 
-  // Set SEO metadata
-  useSEO(
-    '404 - Page Not Found',
-    'The page you are looking for could not be found. Return to JCR Pharma homepage or browse our jobs, blogs, and services.'
-  );
-
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <SEO 
+        title="404 - Page Not Found"
+        description="The page you are looking for could not be found. Return to JCR Pharma homepage or browse our jobs, blogs, and services."
+      />
+      <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="bg-brand-blue py-20">
         <div className="container mx-auto px-6">
@@ -286,7 +285,8 @@ const NotFound = () => {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 
