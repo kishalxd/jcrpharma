@@ -29,6 +29,7 @@ import HiringRequestDetail from './pages/HiringRequestDetail';
 import EmployeeApplicationDetail from './pages/EmployeeApplicationDetail';
 import JobView from './pages/JobView';
 import JobApply from './pages/JobApply';
+import Sitemap from './pages/Sitemap';
 
 
 // ScrollToTop component that scrolls to top on route change
@@ -164,6 +165,9 @@ function App() {
                 </AdminProtectedRoute>
               } 
             />
+            
+            {/* Sitemap Route - Must be before catch-all */}
+            <Route path="/sitemap.xml" element={<Sitemap />} />
             
             {/* Regular App Routes */}
             <Route 

@@ -1,3 +1,25 @@
 # https://www.robotstxt.org/robotstxt.html
+# Robots.txt for JCR Pharma - https://jcrpharma.co.uk
+
+# Allow all search engines to crawl the site
 User-agent: *
-Disallow:
+Allow: /
+
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /admin-login
+Disallow: /admin/dashboard
+Disallow: /profile
+Disallow: /reset-password
+Disallow: /hiring/
+Disallow: /employee-application/
+
+# Disallow API endpoints and internal routes
+Disallow: /api/
+Disallow: /*.json$
+
+# Sitemap location
+Sitemap: https://jcrpharma.co.uk/sitemap.xml
+
+# Crawl delay (optional - adjust based on your server capacity)
+# Crawl-delay: 1
