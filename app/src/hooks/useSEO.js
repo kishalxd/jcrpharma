@@ -57,21 +57,23 @@ export const useSEO = (title, description, options = {}) => {
       setTwitterMeta('twitter:description', description);
     }
     
-    // Twitter image - use provided image or default to logo
-    // Ensure absolute URL for Twitter cards
+    // Twitter image - use provided image or default to twitter_card.png
+    // Ensure absolute URL for Twitter cards and Open Graph
     const getAbsoluteUrl = (path) => {
       // If path is already absolute, return it
       if (path.startsWith('http://') || path.startsWith('https://')) {
         return path;
       }
-      // Use environment variable if available, otherwise use current origin
-      const baseUrl = process.env.REACT_APP_SITE_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+      // Use environment variable if available, otherwise use production domain for social sharing
+      // Social media crawlers need absolute URLs with the production domain
+      const baseUrl = process.env.REACT_APP_SITE_URL || 
+                      'https://jcrpharma.co.uk';
       // Remove leading slash if present to avoid double slashes
       const cleanPath = path.startsWith('/') ? path : `/${path}`;
       return `${baseUrl}${cleanPath}`;
     };
     
-    const imageUrl = getAbsoluteUrl(options.image || '/jcr_logo.jpg');
+    const imageUrl = getAbsoluteUrl(options.image || '/twitter_card.png');
     setTwitterMeta('twitter:image', imageUrl);
     setTwitterMeta('twitter:image:alt', title ? `${title} - JCR Pharma` : 'JCR Pharma - Life Sciences Recruitment');
 
@@ -95,7 +97,13 @@ export const useSEO = (title, description, options = {}) => {
       setOGMeta('og:description', description);
     }
     setOGMeta('og:image', imageUrl);
+    setOGMeta('og:image:secure_url', imageUrl);
+    setOGMeta('og:image:type', 'image/png');
+    setOGMeta('og:image:width', '1200');
+    setOGMeta('og:image:height', '630');
+    setOGMeta('og:image:alt', title ? `${title} - JCR Pharma` : 'JCR Pharma - Life Sciences Recruitment');
     setOGMeta('og:site_name', 'JCR Pharma');
+    setOGMeta('og:locale', 'en_GB');
 
     // Cleanup function to reset to default if needed
     return () => {

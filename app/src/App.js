@@ -6,6 +6,7 @@ import Header from './components/Header';
 import CookieConsent from './components/CookieConsent';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminProtectedRoute from './components/AdminProtectedRoute';
+import { StructuredData, generateOrganizationSchema, getBreadcrumbsForPath, generateBreadcrumbSchema } from './components/StructuredData';
 import Home from './pages/Home';
 import Specialisms from './pages/Specialisms';
 import Jobs from './pages/Jobs';
@@ -30,6 +31,7 @@ import EmployeeApplicationDetail from './pages/EmployeeApplicationDetail';
 import JobView from './pages/JobView';
 import JobApply from './pages/JobApply';
 import Sitemap from './pages/Sitemap';
+import NotFound from './pages/NotFound';
 
 
 // ScrollToTop component that scrolls to top on route change
@@ -41,6 +43,34 @@ function ScrollToTop() {
   }, [pathname]);
 
   return null;
+}
+
+// Component to add structured data to all pages
+function StructuredDataWrapper({ children }) {
+  const location = useLocation();
+  
+  // Skip structured data for admin pages
+  const isAdminPage = location.pathname.startsWith('/admin') || 
+                     location.pathname === '/admin-login' ||
+                     location.pathname.startsWith('/hiring/') ||
+                     location.pathname.startsWith('/employee-application/');
+  
+  if (isAdminPage) {
+    return <>{children}</>;
+  }
+
+  // Get breadcrumbs for current path
+  const breadcrumbs = getBreadcrumbsForPath(location.pathname);
+  const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbs);
+  const organizationSchema = generateOrganizationSchema();
+
+  return (
+    <>
+      <StructuredData data={organizationSchema} />
+      {breadcrumbs.length > 1 && <StructuredData data={breadcrumbSchema} />}
+      {children}
+    </>
+  );
 }
 
 function App() {
@@ -173,12 +203,13 @@ function App() {
             <Route 
               path="/*" 
               element={
-                <div className="App">
-                  <Header />
-                  <CookieConsent />
-                  <main className="pt-14">
-                    <Routes>
-                      <Route path="/" element={<Home />} />
+                <StructuredDataWrapper>
+                  <div className="App">
+                    <Header />
+                    <CookieConsent />
+                    <main className="pt-14">
+                      <Routes>
+                        <Route path="/" element={<Home />} />
                       <Route path="/specialisms" element={<Specialisms />} />
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/jobs/view/:id" element={<JobView />} />
@@ -207,9 +238,12 @@ function App() {
                           </ProtectedRoute>
                         } 
                       />
-                    </Routes>
-                  </main>
-                </div>
+                      {/* 404 - Catch all route - must be last */}
+                      <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </main>
+                  </div>
+                </StructuredDataWrapper>
               } 
             />
           </Routes>

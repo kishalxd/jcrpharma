@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import { useAdmin } from '../components/AdminContext';
 import { useSEO } from '../hooks/useSEO';
 import { sendEmailNotification } from '../utils/emailUtils';
+import Footer from '../components/Footer';
 
 // EditableText Component for inline editing
 const EditableText = ({ value, onChange, multiline = false, placeholder, className = "", rows = 1, editMode = false, variant = 'dark' }) => {
@@ -1208,107 +1209,7 @@ const Specialisations = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-brand-blue text-white">
-        {/* Main Footer Content */}
-        <div className="pt-20 pb-16">
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-20">
-              <h2 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
-                Connect with specialised talent today
-              </h2>
-              <p className="text-gray-300 text-lg mb-10 max-w-3xl mx-auto leading-relaxed">
-                Join hundreds of life-sciences companies who trust us to deliver exceptional recruitment results.
-              </p>
-              
-              {/* Email Signup */}
-              <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-lg mx-auto mb-4">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-5 py-3 rounded-full bg-transparent border border-white/30 text-white placeholder-gray-400 focus:outline-none focus:border-white/50 text-sm"
-                />
-                <button className="bg-brand-blue hover:bg-brand-blue/90 text-white px-8 py-3 rounded-full transition-all duration-300 font-medium text-sm">
-                  Subscribe
-                </button>
-              </div>
-              
-              <p className="text-gray-400 text-sm">
-                Get updates on market insights and recruitment trends.
-              </p>
-            </div>
-
-            {/* Footer Links */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 max-w-6xl mx-auto">
-              {/* Logo */}
-              <div className="lg:col-span-1">
-                <div className="mb-8">
-                  <img 
-                    src="/jcr_white_transparent.png" 
-                    alt="JCR Pharma" 
-                    className="h-12 w-auto object-contain"
-                  />
-                </div>
-                <p className="text-gray-300 leading-relaxed text-sm">
-                  Specialised recruitment for life-sciences data and biometrics roles.
-                </p>
-              </div>
-
-              {/* Specialisations */}
-              <div>
-                <h4 className="text-white font-medium mb-6">Specialisms</h4>
-                <ul className="space-y-4">
-                  <li><a href="/specialisms/biostatistics" className="text-gray-300 hover:text-white transition-colors text-sm">Biostatistics</a></li>
-                  <li><a href="/specialisms/clinical" className="text-gray-300 hover:text-white transition-colors text-sm">Clinical Data Management</a></li>
-                  <li><a href="/specialisms/statistical-programming" className="text-gray-300 hover:text-white transition-colors text-sm">Statistical Programming</a></li>
-                  <li><a href="/specialisms/data-science" className="text-gray-300 hover:text-white transition-colors text-sm">Data Science</a></li>
-                  <li><a href="/specialisms/bioinformatics" className="text-gray-300 hover:text-white transition-colors text-sm">Bioinformatics</a></li>
-                </ul>
-              </div>
-
-              {/* Services */}
-              <div>
-                <h4 className="text-white font-medium mb-6">Services</h4>
-                <ul className="space-y-4">
-                  <li><a href="/services/permanent" className="text-gray-300 hover:text-white transition-colors text-sm">Permanent Placement</a></li>
-                  <li><a href="/services/contract" className="text-gray-300 hover:text-white transition-colors text-sm">Contract Staffing</a></li>
-                  <li><a href="/services/executive" className="text-gray-300 hover:text-white transition-colors text-sm">Executive Search</a></li>
-                  <li><a href="/services/consulting" className="text-gray-300 hover:text-white transition-colors text-sm">Recruitment Consulting</a></li>
-                  <li><a href="/services/market-insights" className="text-gray-300 hover:text-white transition-colors text-sm">Market Insights</a></li>
-                </ul>
-              </div>
-
-              {/* Company */}
-              <div>
-                <h4 className="text-white font-medium mb-6">Company</h4>
-                <ul className="space-y-4">
-                  <li><a href="/about" className="text-gray-300 hover:text-white transition-colors text-sm">About Us</a></li>
-                  <li><a href="/careers" className="text-gray-300 hover:text-white transition-colors text-sm">Careers</a></li>
-                  <li><a href="/contact" className="text-gray-300 hover:text-white transition-colors text-sm">Contact</a></li>
-                  <li><a href="/blog" className="text-gray-300 hover:text-white transition-colors text-sm">Blog</a></li>
-                  <li><a href="/news" className="text-gray-300 hover:text-white transition-colors text-sm">News</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Bottom */}
-        <div className="border-t border-white/20 py-8">
-          <div className="container mx-auto px-6">
-            <div className="flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto">
-              <p className="text-gray-400 text-sm mb-4 md:mb-0">
-                © 2025 Life Sciences Recruitment. All rights reserved.
-              </p>
-              <div className="flex gap-8">
-                <a href="/privacy" className="text-gray-400 hover:text-white transition-colors text-sm">Privacy Policy</a>
-                <a href="/terms" className="text-gray-400 hover:text-white transition-colors text-sm">Terms of Service</a>
-                <a href="/cookies" className="text-gray-400 hover:text-white transition-colors text-sm">Cookie Policy</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };

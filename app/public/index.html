@@ -14,6 +14,7 @@
     <!-- Twitter Card Meta Tags - Will be updated by React, but these are fallbacks for crawlers -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@JCRPharma" />
+    <meta name="twitter:creator" content="@JCRPharma" />
     <meta name="twitter:title" content="JCR Pharma - Life Sciences Recruitment Specialists" />
     <meta name="twitter:description" content="Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe." />
     <meta name="twitter:image" id="twitter-image" content="" />
@@ -21,27 +22,35 @@
     
     <!-- Open Graph Meta Tags - Will be updated by React, but these are fallbacks for crawlers -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" id="og-url" content="" />
     <meta property="og:title" content="JCR Pharma - Life Sciences Recruitment Specialists" />
     <meta property="og:description" content="Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe." />
     <meta property="og:image" id="og-image" content="" />
+    <meta property="og:image:secure_url" id="og-image-secure" content="" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="JCR Pharma - Life Sciences Recruitment" />
     <meta property="og:site_name" content="JCR Pharma" />
+    <meta property="og:locale" content="en_GB" />
     
     <!-- Set absolute URLs for social media cards immediately -->
     <script>
       (function() {
-        var baseUrl = window.location.origin;
-        var imagePath = baseUrl + '/jcr_logo.jpg';
+        // Use production domain for social media previews (works better with crawlers)
+        var baseUrl = 'https://jcrpharma.co.uk';
+        var imagePath = baseUrl + '/twitter_card.png';
+        var currentUrl = window.location.href;
+        
         var twitterImage = document.getElementById('twitter-image');
         var ogImage = document.getElementById('og-image');
+        var ogImageSecure = document.getElementById('og-image-secure');
+        var ogUrl = document.getElementById('og-url');
+        
         if (twitterImage) twitterImage.setAttribute('content', imagePath);
         if (ogImage) ogImage.setAttribute('content', imagePath);
-        var ogUrl = document.querySelector('meta[property="og:url"]');
-        if (!ogUrl) {
-          ogUrl = document.createElement('meta');
-          ogUrl.setAttribute('property', 'og:url');
-          document.head.appendChild(ogUrl);
-        }
-        ogUrl.setAttribute('content', window.location.href);
+        if (ogImageSecure) ogImageSecure.setAttribute('content', imagePath);
+        if (ogUrl) ogUrl.setAttribute('content', currentUrl);
       })();
     </script>
     

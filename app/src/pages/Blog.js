@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { generateImageAltText } from '../utils/blogUtils';
 import { useSEO } from '../hooks/useSEO';
+import { StructuredData, generateArticleSchema } from '../components/StructuredData';
 
 const Blog = () => {
   const { slug } = useParams();
@@ -354,8 +355,11 @@ const Blog = () => {
 
   // Single blog view
   if (selectedBlog) {
+    const articleSchema = generateArticleSchema(selectedBlog);
+    
     return (
       <div className="min-h-screen bg-white">
+        <StructuredData data={articleSchema} />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Back button */}
           <button
