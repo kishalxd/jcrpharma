@@ -923,12 +923,13 @@ const Home = () => {
             </div>
             
             {/* Right side - Image (50%) */}
-            <div>
-              <div className="rounded-lg overflow-hidden shadow-2xl">
+            <div className="w-full">
+              <div className="rounded-lg overflow-hidden shadow-2xl aspect-square w-full">
                 <img 
                   src="/home_hero.JPG" 
                   alt="Life Sciences Recruitment" 
-                  className="w-full h-full object-cover aspect-square"
+                  className="w-full h-full object-cover"
+                  loading="eager"
                 />
               </div>
             </div>
