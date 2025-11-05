@@ -837,8 +837,8 @@ const Home = () => {
   return (
     <>
       <SEO 
-        title="Home"
-        description="Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe in biostatistics, clinical data management, and data science."
+        title=""
+        description="Specialised life sciences recruitment connecting biometrics, biostatistics & data professionals with biotech and pharmaceutical companies in the UK, USA & Europe."
       />
       <div className="min-h-screen">
         {/* Edit Mode Header */}

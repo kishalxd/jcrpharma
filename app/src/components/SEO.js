@@ -25,8 +25,8 @@ const SEO = ({
   
   // Default values
   const defaultImage = '/twitter_card.png';
-  const defaultTitle = 'JCR Pharma | Life Sciences Recruitment Specialists';
-  const defaultDescription = 'Specialised recruitment for life sciences, biometrics & data professionals. Connect top talent with biotech and pharmaceutical companies across UK, USA, and Europe.';
+  const defaultTitle = 'JCR Pharma | Life Sciences & Biometrics Recruitment';
+  const defaultDescription = 'Specialised life sciences recruitment connecting biometrics, biostatistics & data professionals with biotech and pharmaceutical companies in the UK, USA & Europe.';
   
   // Build absolute URLs
   const getAbsoluteUrl = (path) => {
@@ -38,7 +38,8 @@ const SEO = ({
   };
   
   // Use provided values or defaults
-  const pageTitle = title ? `${title} | JCR Pharma` : defaultTitle;
+  // For homepage (empty title), use default title without suffix
+  const pageTitle = title === "" ? defaultTitle : (title ? `${title} | JCR Pharma` : defaultTitle);
   const pageDescription = description || defaultDescription;
   const imageUrl = getAbsoluteUrl(options.image || defaultImage);
   const pageUrl = getAbsoluteUrl(options.url || location.pathname);
@@ -85,6 +86,28 @@ const SEO = ({
       <meta name="twitter:description" content={pageDescription} />
       <meta name="twitter:image" content={imageUrl} />
       <meta name="twitter:image:alt" content={pageTitle} />
+      
+      {/* Organization Schema */}
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "JCR Pharma",
+          "url": baseUrl,
+          "logo": getAbsoluteUrl("/jcr_logo.jpg"),
+          "sameAs": [
+            "https://www.linkedin.com/company/jcr-pharma/",
+            "https://www.facebook.com/share/16cRTXXnJq/?mibextid=wwXIfr",
+            "https://www.instagram.com/jcrpharmaltd/",
+            "https://x.com/JCRPharma",
+            "https://www.youtube.com/@JCRPharma"
+          ],
+          "description": "Specialised recruitment for life sciences, biometrics & data professionals. Connecting top talent with biotech and pharmaceutical companies across UK, USA, and Europe."
+        })}
+      </script>
+      
+      {/* Favicon with absolute URL */}
+      <link rel="icon" href={`${baseUrl}/favicon.ico`} type="image/x-icon" />
     </Helmet>
   );
 };
