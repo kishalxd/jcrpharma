@@ -131,7 +131,7 @@ const Footer = () => {
               <h4 className="text-white font-medium mb-6">For Candidates</h4>
               <ul className="space-y-4">
                 <li><a href="/jobs" className="text-gray-300 hover:text-white transition-colors text-sm">Browse Jobs</a></li>
-                <li><a href="/candidates" className="text-gray-300 hover:text-white transition-colors text-sm">Upload CV</a></li>
+                <li><a href="/find-jobs" className="text-gray-300 hover:text-white transition-colors text-sm">Upload CV</a></li>
                 <li><a href="/blogs" className="text-gray-300 hover:text-white transition-colors text-sm">Blogs</a></li>
                 <li><a href="/specialisms" className="text-gray-300 hover:text-white transition-colors text-sm">Specialisms</a></li>
               </ul>
