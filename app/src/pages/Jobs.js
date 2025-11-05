@@ -23,6 +23,7 @@ const Jobs = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [jobsPerPage] = useState(10);
+  const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const navigate = useNavigate();
 
   // Set SEO metadata
@@ -809,16 +810,24 @@ const Jobs = () => {
               ].map((faq, index) => (
                 <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200">
                   <button
+                    onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
                     className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
                   >
                     <span className="text-lg font-medium text-gray-900">{faq.question}</span>
-                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg 
+                      className={`w-5 h-5 text-gray-500 transition-transform duration-200 ${openFaqIndex === index ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  <div className="px-6 pb-4">
-                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
-                  </div>
+                  {openFaqIndex === index && (
+                    <div className="px-6 pb-4">
+                      <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -839,36 +848,17 @@ const Jobs = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white hover:bg-gray-100 text-brand-blue px-8 py-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl font-medium">
+              <button 
+                onClick={() => navigate('/find-jobs')}
+                className="bg-white hover:bg-gray-100 text-brand-blue px-8 py-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
+              >
                 Submit your CV
-              </button>
-              <button className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-full transition-all duration-300 backdrop-blur-md shadow-[0_2px_4px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_8px_rgba(0,0,0,0.2)] font-medium border border-white/20">
-                Talk to a consultant
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Sticky CTA Bar for Desktop */}
-      <div className="hidden lg:block fixed bottom-6 right-6 z-50">
-        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900 mb-1">Stay updated</p>
-              <p className="text-xs text-gray-600">Get notified of new opportunities</p>
-            </div>
-            <div className="flex gap-2">
-              <button className="bg-brand-blue hover:bg-blue-700 text-white px-3 py-2 rounded text-xs font-medium transition-all">
-                Create alert
-              </button>
-              <button className="text-brand-blue hover:text-blue-700 px-3 py-2 rounded text-xs font-medium transition-all border border-brand-blue hover:border-blue-700">
-                Submit CV
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Mobile Bottom Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-50">
@@ -885,7 +875,10 @@ const Jobs = () => {
             </svg>
             Alerts
           </button>
-          <button className="flex-1 bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2">
+          <button 
+            onClick={() => navigate('/find-jobs')}
+            className="flex-1 bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>

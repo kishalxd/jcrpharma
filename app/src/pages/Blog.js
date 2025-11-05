@@ -407,9 +407,135 @@ const Blog = () => {
 
           {/* Blog Content */}
           <div 
-            className="prose prose-lg max-w-none text-gray-800 leading-relaxed"
+            className="blog-content text-gray-800 leading-relaxed"
             dangerouslySetInnerHTML={{ __html: selectedBlog.content }}
           />
+          <style>{`
+            .blog-content {
+              max-width: none;
+              line-height: 1.75;
+            }
+            .blog-content h1 {
+              font-size: 2.25rem;
+              font-weight: bold;
+              margin: 1.5rem 0 1rem 0;
+              line-height: 1.2;
+              color: #111827;
+            }
+            .blog-content h2 {
+              font-size: 1.875rem;
+              font-weight: bold;
+              margin: 1.25rem 0 0.75rem 0;
+              line-height: 1.3;
+              color: #111827;
+            }
+            .blog-content h3 {
+              font-size: 1.5rem;
+              font-weight: bold;
+              margin: 1rem 0 0.5rem 0;
+              line-height: 1.4;
+              color: #111827;
+            }
+            .blog-content p {
+              margin: 1rem 0;
+              line-height: 1.75;
+            }
+            .blog-content strong,
+            .blog-content b {
+              font-weight: bold;
+            }
+            .blog-content em,
+            .blog-content i {
+              font-style: italic;
+            }
+            .blog-content u {
+              text-decoration: underline;
+            }
+            .blog-content s,
+            .blog-content strike {
+              text-decoration: line-through;
+            }
+            .blog-content ul {
+              margin: 1rem 0;
+              padding-left: 2rem;
+              list-style-type: disc;
+              list-style-position: outside;
+            }
+            .blog-content ol {
+              margin: 1rem 0;
+              padding-left: 2rem;
+              list-style-type: decimal;
+              list-style-position: outside;
+            }
+            .blog-content li {
+              margin: 0.5rem 0;
+              display: list-item;
+            }
+            .blog-content a {
+              position: relative;
+              color: #139A7A;
+              text-decoration: none;
+            }
+            .blog-content a::after {
+              content: '';
+              position: absolute;
+              left: 0;
+              bottom: -2px;
+              width: 0%;
+              height: 2px;
+              background-color: #139A7A;
+              transition: width 0.3s ease;
+            }
+            .blog-content a:hover {
+              color: #0E7C64;
+            }
+            .blog-content a:hover::after {
+              width: 100%;
+            }
+            .blog-content img {
+              max-width: 100%;
+              height: auto;
+              margin: 1.5rem 0;
+              border-radius: 0.5rem;
+            }
+            .blog-content blockquote {
+              border-left: 4px solid #E5E7EB;
+              padding-left: 1rem;
+              margin: 1.5rem 0;
+              color: #6B7280;
+              font-style: italic;
+            }
+            .blog-content code {
+              background-color: #F3F4F6;
+              padding: 0.125rem 0.375rem;
+              border-radius: 0.25rem;
+              font-family: monospace;
+              font-size: 0.875em;
+            }
+            .blog-content pre {
+              background-color: #F3F4F6;
+              padding: 1rem;
+              border-radius: 0.5rem;
+              overflow-x: auto;
+              margin: 1.5rem 0;
+            }
+            .blog-content pre code {
+              background-color: transparent;
+              padding: 0;
+            }
+            .blog-content [style*="text-align: left"] {
+              text-align: left;
+            }
+            .blog-content [style*="text-align: center"] {
+              text-align: center;
+            }
+            .blog-content [style*="text-align: right"] {
+              text-align: right;
+            }
+            .blog-content [style*="text-align: justify"] {
+              text-align: justify;
+            }
+          `}</style>
         </div>
         </div>
       </>

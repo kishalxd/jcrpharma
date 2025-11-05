@@ -44,6 +44,17 @@ const SEO = ({
   const pageUrl = getAbsoluteUrl(options.url || location.pathname);
   const ogType = options.type || 'website';
   
+  // Debug: Log SEO data (remove in production)
+  React.useEffect(() => {
+    console.log('SEO Component Rendered:', {
+      pageTitle,
+      pageDescription: pageDescription.substring(0, 50) + '...',
+      imageUrl,
+      pageUrl,
+      ogType
+    });
+  }, [pageTitle, pageDescription, imageUrl, pageUrl, ogType]);
+  
   return (
     <Helmet>
       {/* Primary Meta Tags */}

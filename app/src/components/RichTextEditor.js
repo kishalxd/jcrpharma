@@ -87,9 +87,9 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
   );
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+    <div className="border border-gray-200 overflow-hidden bg-white flex flex-col h-full">
       {/* Toolbar */}
-      <div className="border-b border-gray-200 px-3 py-2 bg-gray-50">
+      <div className="border-b border-gray-200 px-3 py-2 bg-gray-50 sticky top-0 z-10">
         <div className="flex flex-wrap items-center gap-1">
           {/* Text Formatting */}
           <div className="flex items-center border-r border-gray-300 pr-2 mr-2 gap-0.5">
@@ -97,8 +97,8 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
               onClick={() => executeCommand('bold')}
               title="Bold (Ctrl+B)"
             >
-              <svg className="w-4 h-4 font-bold" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M6 4h8a4 4 0 0 1 4 4 3.5 3.5 0 0 1-1.5 2.9A4 4 0 0 1 14 19H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm1 2v4h7a2 2 0 1 0 0-4H7zm0 6v4h7a2 2 0 1 0 0-4H7z"/>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M15.6 10.79c.97-.67 1.65-1.77 1.65-2.79 0-2.26-1.75-4-4-4H7v14h7.04c2.09 0 3.71-1.7 3.71-3.79 0-1.52-.86-2.82-2.15-3.42zM10 6.5h3c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-3v-3zm3.5 9H10v-3h3.5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5z"/>
               </svg>
             </ToolbarButton>
             <ToolbarButton
@@ -106,7 +106,7 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
               title="Italic (Ctrl+I)"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M15 4H9v2h2.5l-3.5 8H6v2h6v-2H9.5l3.5-8H15V4z"/>
+                <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4h-8z"/>
               </svg>
             </ToolbarButton>
             <ToolbarButton
@@ -114,7 +114,7 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
               title="Underline (Ctrl+U)"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M5 21h14v-2H5v2zM12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6z"/>
+                <path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z"/>
               </svg>
             </ToolbarButton>
             <ToolbarButton
@@ -161,16 +161,16 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
               onClick={() => insertList(false)}
               title="Bullet List"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.68-1.5 1.5s.68 1.5 1.5 1.5 1.5-.68 1.5-1.5-.67-1.5-1.5-1.5zM7 19h14v-2H7v2zm0-6h14v-2H7v2zm0-8v2h14V5H7z"/>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 6h13M8 12h13m-13 6h13M3 6h.01M3 12h.01M3 18h.01" />
               </svg>
             </ToolbarButton>
             <ToolbarButton
               onClick={() => insertList(true)}
               title="Numbered List"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h14V5H7zm0 14h14v-2H7v2zm0-6h14v-2H7v2z"/>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h13M5 15h13" />
               </svg>
             </ToolbarButton>
           </div>
@@ -181,24 +181,32 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
               onClick={() => executeCommand('justifyLeft')}
               title="Align Left"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M15 15H3v2h12v-2zm0-8H3v2h12V7zM3 13h18v-2H3v2zm0 8h18v-2H3v2zM3 3v2h18V3H3z"/>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6h18M3 12h18M3 18h18" />
               </svg>
             </ToolbarButton>
             <ToolbarButton
               onClick={() => executeCommand('justifyCenter')}
               title="Align Center"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M7 15v2h10v-2H7zm-4 6h18v-2H3v2zm0-8h18v-2H3v2zm4-6v2h10V7H7zM3 3v2h18V3H3z"/>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M8 12h8m-8 6h8" />
               </svg>
             </ToolbarButton>
             <ToolbarButton
               onClick={() => executeCommand('justifyRight')}
               title="Align Right"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 6H3m18 6H3m18 6H3" />
+              </svg>
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => executeCommand('justifyFull')}
+              title="Justify"
+            >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M3 21h18v-2H3v2zm6-4h12v-2H9v2zm-6-4h18v-2H3v2zm6-4h12V7H9v2zM3 3v2h18V3H3z"/>
+                <path d="M3 21h18v-2H3v2zM3 8v8l4-4-4-4zm8 9h10v-2H11v2zM3 3v2h18V3H3zm8 6h10V7H11v2zm0 4h10v-2H11v2z"/>
               </svg>
             </ToolbarButton>
           </div>
@@ -209,16 +217,16 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
               onClick={createLink}
               title="Insert Link"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H6.9C4.29 7 2.2 9.09 2.2 11.7s2.09 4.7 4.7 4.7h4v-1.9H6.9c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9.1-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.61 0 4.7-2.09 4.7-4.7S19.71 7 17.1 7z"/>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
               </svg>
             </ToolbarButton>
             <ToolbarButton
               onClick={insertImage}
               title="Insert Image"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </ToolbarButton>
           </div>
@@ -230,7 +238,7 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        className="min-h-[500px] p-6 focus:outline-none text-gray-800 leading-relaxed"
+        className="min-h-[500px] p-6 pb-24 focus:outline-none text-gray-800 leading-relaxed flex-1 overflow-y-auto"
         style={{ 
           fontSize: '16px',
           lineHeight: '1.6'
@@ -272,13 +280,23 @@ const RichTextEditor = ({ value, onChange, placeholder }) => {
           margin: 0.5rem 0;
         }
         
-        [contenteditable] ul, [contenteditable] ol {
+        [contenteditable] ul {
           margin: 0.5rem 0;
           padding-left: 2rem;
+          list-style-type: disc;
+          list-style-position: outside;
+        }
+        
+        [contenteditable] ol {
+          margin: 0.5rem 0;
+          padding-left: 2rem;
+          list-style-type: decimal;
+          list-style-position: outside;
         }
         
         [contenteditable] li {
           margin: 0.25rem 0;
+          display: list-item;
         }
         
         [contenteditable] a {

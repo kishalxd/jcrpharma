@@ -546,7 +546,7 @@ const Home = () => {
       subtitle: "Quantifiable results that demonstrate our specialised approach",
       stat1: {
         number: "3",
-        description: "Average time-to-hire"
+        description: "Weeks to hire"
       },
       stat2: {
         number: "95%",
