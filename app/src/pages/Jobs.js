@@ -32,11 +32,6 @@ const Jobs = () => {
     'Browse the latest life sciences and biometrics job opportunities. Find biostatistics, clinical data management, data science, bioinformatics, and medical affairs roles at top pharmaceutical and biotech companies across UK, USA, and Europe. Search, filter, and apply for your next career move.'
   );
 
-  const popularSearches = [
-    'Biostatistician', 'Clinical Data Manager', 'SAS Programmer', 'Bioinformatics',
-    'Statistical Programming', 'CDISC', 'Medical Writer', 'Regulatory Affairs'
-  ];
-
   const filterOptions = {
     specialism: ['Biostatistics', 'Clinical Data Management', 'Bioinformatics', 'Medical Affairs', 'Regulatory Affairs'],
     contract: ['Permanent', 'Contract', 'Interim'],
@@ -333,22 +328,6 @@ const Jobs = () => {
                     />
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Popular Search Chips */}
-            <div className="max-w-4xl mx-auto">
-              <p className="text-gray-300 text-xs mb-2">Popular searches:</p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {popularSearches.map((search, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSearchKeyword(search)}
-                    className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-full text-xs transition-all duration-300 backdrop-blur-sm"
-                  >
-                    {search}
-                  </button>
-                ))}
               </div>
             </div>
           </div>
