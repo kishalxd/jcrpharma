@@ -91,15 +91,16 @@ const Jobs = () => {
   };
 
   const getFilteredJobs = () => {
+    if (!Array.isArray(jobs)) return [];
     return jobs.filter(job => {
       // Keyword search
       if (searchKeyword) {
         const keyword = searchKeyword.toLowerCase();
         const matchesKeyword = 
-          job.title.toLowerCase().includes(keyword) ||
-          job.company.toLowerCase().includes(keyword) ||
-          job.description.toLowerCase().includes(keyword) ||
-          job.skills.some(skill => skill.toLowerCase().includes(keyword));
+          (job.title || '').toLowerCase().includes(keyword) ||
+          (job.company || '').toLowerCase().includes(keyword) ||
+          (job.description || '').toLowerCase().includes(keyword) ||
+          (Array.isArray(job.skills) && job.skills.some(skill => (skill || '').toLowerCase().includes(keyword)));
         
         if (!matchesKeyword) return false;
       }
@@ -107,7 +108,7 @@ const Jobs = () => {
       // Location search
       if (searchLocation) {
         const location = searchLocation.toLowerCase();
-        if (!job.location.toLowerCase().includes(location)) return false;
+        if (!(job.location || '').toLowerCase().includes(location)) return false;
       }
 
       // Specialism filter
@@ -132,17 +133,19 @@ const Jobs = () => {
 
       // Location filter
       if (selectedFilters.location.length > 0) {
+        if (!job.location) return false;
         const jobLocation = job.location.split(',')[0].trim(); // Get city part
         if (!selectedFilters.location.some(loc => jobLocation.toLowerCase().includes(loc.toLowerCase()))) return false;
       }
 
       // Skills filter
       if (selectedFilters.skills.length > 0) {
+        if (!Array.isArray(job.skills) || job.skills.length === 0) return false;
         if (!selectedFilters.skills.some(skill => job.skills.includes(skill))) return false;
       }
 
       // Posted date filter
-      if (selectedFilters.posted) {
+      if (selectedFilters.posted && job.created_at) {
         const jobDate = new Date(job.created_at);
         const now = new Date();
         const daysDiff = Math.floor((now - jobDate) / (1000 * 60 * 60 * 24));
@@ -170,9 +173,10 @@ const Jobs = () => {
   };
 
   const getSortedJobs = (jobs) => {
+    if (!Array.isArray(jobs)) return [];
     // First, separate featured and non-featured jobs
-    const featuredJobs = jobs.filter(job => job.featured);
-    const nonFeaturedJobs = jobs.filter(job => !job.featured);
+    const featuredJobs = jobs.filter(job => job && job.featured);
+    const nonFeaturedJobs = jobs.filter(job => job && !job.featured);
     
     // Sort each group separately
     const sortJobs = (jobList) => {
@@ -190,17 +194,25 @@ const Jobs = () => {
             return aMax - bMax;
           });
         case 'recent':
-          return [...jobList].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          return [...jobList].sort((a, b) => {
+            const aDate = a.created_at ? new Date(a.created_at) : new Date(0);
+            const bDate = b.created_at ? new Date(b.created_at) : new Date(0);
+            return bDate - aDate;
+          });
         case 'oldest':
-          return [...jobList].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+          return [...jobList].sort((a, b) => {
+            const aDate = a.created_at ? new Date(a.created_at) : new Date(0);
+            const bDate = b.created_at ? new Date(b.created_at) : new Date(0);
+            return aDate - bDate;
+          });
         case 'title-asc':
-          return [...jobList].sort((a, b) => a.title.localeCompare(b.title));
+          return [...jobList].sort((a, b) => (a.title || '').localeCompare(b.title || ''));
         case 'title-desc':
-          return [...jobList].sort((a, b) => b.title.localeCompare(a.title));
+          return [...jobList].sort((a, b) => (b.title || '').localeCompare(a.title || ''));
         case 'company-asc':
-          return [...jobList].sort((a, b) => a.company.localeCompare(b.company));
+          return [...jobList].sort((a, b) => (a.company || '').localeCompare(b.company || ''));
         case 'company-desc':
-          return [...jobList].sort((a, b) => b.company.localeCompare(a.company));
+          return [...jobList].sort((a, b) => (b.company || '').localeCompare(a.company || ''));
         default:
           return jobList;
       }
@@ -211,8 +223,14 @@ const Jobs = () => {
   };
 
   const getPostedTime = (createdAt) => {
+    if (!createdAt) return 'Recently';
+    
     const now = new Date();
     const jobDate = new Date(createdAt);
+    
+    // Check if date is valid
+    if (isNaN(jobDate.getTime())) return 'Recently';
+    
     const diffInMs = now - jobDate;
     const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
