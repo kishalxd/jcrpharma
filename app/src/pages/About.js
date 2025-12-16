@@ -111,17 +111,12 @@ const About = () => {
       paragraph2: "We do not measure success by how many CVs we send. We measure it by the relationships we build and by the impact our candidates make. Every search begins with listening, every conversation with understanding, and every placement with trust. JCR Pharma is more than a business to us. It is a commitment to doing recruitment with integrity, empathy, and genuine care for the science that shapes lives."
     },
     team: {
-      title: "Leadership Team",
-      subtitle: "Industry veterans with deep expertise in life-sciences recruitment and talent acquisition",
+      title: "Leadership",
+      subtitle: "Led by industry veterans with deep expertise in life-sciences recruitment and talent acquisition",
       james: {
         name: "James Carpenter",
         title: "Managing Director / Founder",
         bio: "James brings 10 years of recruitment experience, including 5+ years specialised in Biometrics. After graduating from the University of Hertfordshire with a degree in History, he began in graduate and Rec2Rec recruitment before transitioning to life sciences. James built Biometrics desks from scratch across multiple agencies, developing expertise in the European market. A former rugby player who retired to focus on his career, James founded JCR Pharma driven by a vision to transform recruitment through integrity, consultation, and genuine partnership rather than outdated transactional approaches."
-      },
-      mathy: {
-        name: "Mathy Bekele",
-        title: "Principal Consultant",
-        bio: "With five years of specialised recruitment experience in the biometrics space within pharmaceuticals, Mathy began his career at Phaidon International before joining Veramed as an internal recruiter. During his three years at Veramed, he worked directly with statisticians and programmers, making numerous placements across biotech, pharmaceutical, and CRO organisations. His deep understanding of the industry was further strengthened through attending key conferences like PhUSE in London. Mathy joined JCR in 2024, drawn by the company's people-first ethos and commitment to building long-term relationships. Based in Vienna, Austria, he focuses on providing exceptional service while supporting the biotech and pharmaceutical communities."
       }
     },
     values: {
@@ -183,8 +178,7 @@ const About = () => {
           team: {
             ...defaultContent.team,
             ...(data.content?.team || {}),
-            james: { ...defaultContent.team.james, ...(data.content?.team?.james || {}) },
-            mathy: { ...defaultContent.team.mathy, ...(data.content?.team?.mathy || {}) }
+            james: { ...defaultContent.team.james, ...(data.content?.team?.james || {}) }
           },
           values: {
             ...defaultContent.values,
@@ -304,7 +298,7 @@ const About = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-1 gap-12 max-w-2xl mx-auto">
             {/* James Carpenter */}
             <div className="bg-white rounded-lg shadow-sm overflow-hidden opacity-0" data-animate-delay="0">
               <div className="p-8 text-center">
@@ -342,51 +336,6 @@ const About = () => {
                 </p>
                 <div className="flex justify-center space-x-4">
                   <a href="https://www.linkedin.com/in/james-carpenter01/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-brand-blue transition-colors">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                    </svg>
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Mathy Bekele */}
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden opacity-0" data-animate-delay="200">
-              <div className="p-8 text-center">
-                <div className="w-32 h-32 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden relative">
-                  {/* Loading skeleton */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse rounded-full flex items-center justify-center">
-                    <div className="w-8 h-8 bg-gray-300 rounded-full animate-pulse"></div>
-                  </div>
-                  <img 
-                    src="/mathy.png" 
-                    alt="Mathy Bekele" 
-                    className="w-full h-full object-cover relative z-10 opacity-0 transition-opacity duration-500"
-                    loading="lazy"
-                    decoding="async"
-                    onLoad={(e) => {
-                      e.target.style.opacity = '1';
-                      e.target.previousElementSibling.style.display = 'none';
-                    }}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.previousElementSibling.innerHTML = '<span class="text-3xl font-light text-brand-blue">MB</span>';
-                      e.target.previousElementSibling.classList.remove('bg-gradient-to-r', 'from-gray-200', 'via-gray-100', 'to-gray-200', 'animate-pulse');
-                      e.target.previousElementSibling.classList.add('bg-brand-blue/10');
-                    }}
-                  />
-                </div>
-                <h3 className="text-2xl font-medium text-gray-900 mb-2">
-                  {pageContent.team.mathy.name}
-                </h3>
-                <p className="text-brand-blue font-medium mb-4">
-                  {pageContent.team.mathy.title}
-                </p>
-                <p className="text-gray-600 leading-relaxed mb-6">
-                  {pageContent.team.mathy.bio}
-                </p>
-                <div className="flex justify-center space-x-4">
-                  <a href="https://www.linkedin.com/in/mathy-bekele-939361134/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-brand-blue transition-colors">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                     </svg>
