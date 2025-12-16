@@ -112,7 +112,7 @@ const About = () => {
     },
     team: {
       title: "Leadership",
-      subtitle: "Led by industry veterans with deep expertise in life-sciences recruitment and talent acquisition",
+      subtitle: "Led by industry veteran with deep expertise in life-sciences recruitment and talent acquisition",
       james: {
         name: "James Carpenter",
         title: "Managing Director / Founder",
